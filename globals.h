@@ -25,6 +25,8 @@
 #define DATA_DIR "../data/"
 //#endif //WIN32
 
+#define APP_TITLE "Evolution (LD24)"
+
 #include <stdio.h>
 
 class Exception

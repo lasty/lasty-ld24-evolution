@@ -69,6 +69,8 @@ void App::Render()
 	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
 	font.Draw(ortho, 50, 140, 30, "(Evolution)");
 
+	font.Draw(ortho, 10, 470, 12, "This is some status line text.");
+
 //	char ch = '0';
 //	for (int y = 10;  ch <= '9'; y+= 30, ch++)
 //	{

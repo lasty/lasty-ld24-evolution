@@ -26,7 +26,7 @@ int run(int argc, char *argv[])
 	//auto WindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
 	auto WindowFlags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_RESIZABLE;
 
-	SDL_Window *window = SDL_CreateWindow("test", 100, 100, 640, 480, WindowFlags);
+	SDL_Window *window = SDL_CreateWindow(APP_TITLE, 100, 100, 640, 480, WindowFlags);
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, context);

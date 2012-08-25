@@ -102,9 +102,9 @@ public:
 
 	void SetAttributes(Primitive &p);
 
-	void SetCamera(glm::mat4 &projection_matrix, glm::mat4 &modelview_matrix);
-	void SetProjectionMatrix(glm::mat4 &projection_matrix);
-	void SetModelViewMatrix(glm::mat4 &modelview_matrix);
+	void SetCamera(const glm::mat4 &projection_matrix, const glm::mat4 &modelview_matrix);
+	void SetProjectionMatrix(const glm::mat4 &projection_matrix);
+	void SetModelViewMatrix(const glm::mat4 &modelview_matrix);
 
 	void SetTexture(Image *img);
 	void SetTexture(Image &img);

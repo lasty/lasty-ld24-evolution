@@ -13,6 +13,8 @@
 #include "primitives.h"
 #include "program.h"
 
+#include <gtc/matrix_transform.hpp>
+
 App::App()
 :prim(vb)
 {
@@ -27,9 +29,11 @@ App::App()
 	prim.End();
 
 	prog.LoadSource("basic.shader");
-
 	i.LoadFile("tex1.png");
+	//i.LoadFile("font.png");
+
 	prog.SetTexture(i);
+
 }
 
 App::~App()
@@ -53,5 +57,15 @@ void App::Render()
 	glm::mat4 p, m;
 	prog.SetCamera(p, m);
 	prog.Draw(prim);
+
+
+	glm::mat4 ortho = glm::ortho(-20.0f, 20.0f, 10.0f, -10.0f);
+
+	//font.program.SetCamera(ortho, m);
+
+	font.Draw(ortho, m, "Hello World");
+
+	font.Draw(ortho, -15, -3, 3, "12345678910, 11, 12");
+
 
 }

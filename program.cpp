@@ -175,6 +175,7 @@ void Program::LoadSource(std::istream &in)
 	Link();
 	GLERR();
 
+	Use();
 	DiscoverAttributes();
 
 	DiscoverUniforms();
@@ -240,7 +241,7 @@ void Program::DiscoverUniforms()
 
 
 
-void Program::SetCamera(glm::mat4 &projection_matrix, glm::mat4 &modelview_matrix)
+void Program::SetCamera(const glm::mat4 &projection_matrix, const glm::mat4 &modelview_matrix)
 {
 	Use();
 
@@ -248,13 +249,13 @@ void Program::SetCamera(glm::mat4 &projection_matrix, glm::mat4 &modelview_matri
 	SetModelViewMatrix(modelview_matrix);
 }
 
-void Program::SetProjectionMatrix(glm::mat4 &proj)
+void Program::SetProjectionMatrix(const glm::mat4 &proj)
 {
 	glUniformMatrix4fv(projection_matrix, 1, GL_FALSE, glm::value_ptr(proj));
 	GLERR();
 }
 
-void Program::SetModelViewMatrix(glm::mat4 &modelview)
+void Program::SetModelViewMatrix(const glm::mat4 &modelview)
 {
 	glUniformMatrix4fv(modelview_matrix, 1, GL_FALSE, glm::value_ptr(modelview));
 	GLERR();
@@ -274,6 +275,8 @@ void Program::SetTexture(Image &img)
 void Program::UseTexture(Image *img)
 {
 	img->Use();
+	GLERR();
+
 	glUniform1i(texture_diffuse, 0);
 	GLERR();
 }

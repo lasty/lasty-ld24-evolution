@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH $(CMAKE_MODULE_PATH) "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++ -Wno-comment" )
 
 set(SOURCES main.cpp app.cpp vertexbuffer.cpp primitives.cpp
-	 program.cpp image.cpp)
+	 program.cpp image.cpp font.cpp)
 set(DATA_DIRS data)
 
 

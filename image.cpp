@@ -75,15 +75,15 @@ void Image::Use()
 	GLERR();
 	glEnable(GL_TEXTURE_2D);
 	GLERR();
-//	if (blended)
-//	{
-//		glEnable(GL_BLEND);
-//		glBlendFunc(blendfunc1, blendfunc2);
-//	}
-//	else
-//	{
-//		glDisable(GL_BLEND);
-//	}
+	if (blended)
+	{
+		glEnable(GL_BLEND);
+		glBlendFunc(blendfunc1, blendfunc2);
+	}
+	else
+	{
+		glDisable(GL_BLEND);
+	}
 	GLERR();
 }
 

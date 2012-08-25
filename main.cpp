@@ -23,9 +23,10 @@ int run(int argc, char *argv[])
 		THROW(Exception, "Couldn't init SDL");
 	}
 
-	auto WindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+	//auto WindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
+	auto WindowFlags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_RESIZABLE;
 
-	SDL_Window *window = SDL_CreateWindow("test", 10, 10, 640, 480, WindowFlags);
+	SDL_Window *window = SDL_CreateWindow("test", 100, 100, 640, 480, WindowFlags);
 
 	SDL_GLContext context = SDL_GL_CreateContext(window);
 	SDL_GL_MakeCurrent(window, context);

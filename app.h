@@ -5,6 +5,7 @@
 #include "vertexbuffer.h"
 #include "primitives.h"
 #include "program.h"
+#include "font.h"
 
 /*  app
  * 
@@ -29,6 +30,8 @@ public:
 	Program prog;
 
 	Image i;
+
+	Font font;
 
 };
 

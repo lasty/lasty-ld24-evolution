@@ -7,6 +7,10 @@
 #include "program.h"
 #include "font.h"
 
+#include "tileboard.h"
+
+#include <SDL2/SDL.h>
+
 /*  app
  * 
  *  Created for Ludum Dare #24
@@ -33,6 +37,27 @@ public:
 
 	Font font;
 
+	TileBoard gamemap;
+
+	float runtime = 0.0f;
+	glm::vec3 ambientcolour;
+
+
+
+	float zoom = 30.0f;
+	float camx = 100.0f;
+	float camy = 100.0f;
+
+
+	bool mouse_dragging = false;
+
+	void OnMouseDown(int x, int y, int button);
+	void OnMouseUp(int x, int y, int button);
+	void OnMouseWheel(int dx, int dy);
+	void OnMouseMotion(int x, int y, int dx, int dy);
+
+	void OnKeyDown(SDL_Keysym key);
+	void OnKeyUp(SDL_Keysym key);
 };
 
 #endif /* _LASTY_LD24_APP_H_ */

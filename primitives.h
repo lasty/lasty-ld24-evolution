@@ -15,6 +15,7 @@
 
 class Primitive
 {
+protected:
 	friend class Program;
 
 	VertexBuffer *vbuff;  //reference to vertex buffer

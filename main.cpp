@@ -24,7 +24,7 @@ int run(int argc, char *argv[])
 	}
 
 	//auto WindowFlags = SDL_WINDOW_OPENGL | SDL_WINDOW_RESIZABLE;
-	auto WindowFlags = SDL_WINDOW_OPENGL;// | SDL_WINDOW_RESIZABLE;
+	auto WindowFlags = SDL_WINDOW_OPENGL;  // | SDL_WINDOW_RESIZABLE;
 
 	SDL_Window *window = SDL_CreateWindow(APP_TITLE, 100, 100, 640, 480, WindowFlags);
 
@@ -55,6 +55,30 @@ int run(int argc, char *argv[])
 
 					case SDL_QUIT:
 						theapp.running = false;
+					break;
+
+					case SDL_MOUSEBUTTONDOWN:
+						theapp.OnMouseDown(event.button.x, event.button.y, event.button.button);
+					break;
+
+					case SDL_MOUSEBUTTONUP:
+						theapp.OnMouseUp(event.button.x, event.button.y, event.button.button);
+					break;
+
+					case SDL_MOUSEMOTION:
+						theapp.OnMouseMotion(event.motion.x, event.motion.y, event.motion.xrel, event.motion.yrel);
+					break;
+
+					case SDL_MOUSEWHEEL:
+						theapp.OnMouseWheel(event.wheel.x, event.wheel.y);
+					break;
+
+					case SDL_KEYDOWN:
+						theapp.OnKeyDown(event.key.keysym);
+					break;
+
+					case SDL_KEYUP:
+						theapp.OnKeyUp(event.key.keysym);
 					break;
 				}
 			}
@@ -89,7 +113,7 @@ void DumpException(Exception &e)
 	printf("[%s:%d] %s caught! : %s\n", e.file, e.line, e.EName(), e.What());
 
 	std::ostringstream etxt;
-	etxt << "[" << e.file << ":" << e.line << "]\n" << e.What() ;
+	etxt << "[" << e.file << ":" << e.line << "]\n" << e.What();
 	MessageBox(nullptr, etxt.str().c_str(), e.EName(), 0);
 }
 #else
@@ -98,7 +122,6 @@ void DumpException(Exception &e)
 	printf("[%s:%d] %s caught! : %s\n", e.file, e.line, e.EName(), e.What());
 }
 #endif
-
 
 #ifdef __WIN32__
 #include <unistd.h>
@@ -134,8 +157,6 @@ void ChangeDirectoryToHere(char* argv0)
 }
 
 #endif
-
-
 
 int main(int argc, char *argv[])
 {

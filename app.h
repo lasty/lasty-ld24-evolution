@@ -2,6 +2,9 @@
 #define _LASTY_LD24_APP_H_
 #line 4 "app.h"
 
+#include "vertexbuffer.h"
+#include "primitives.h"
+
 /*  app
  * 
  *  Created for Ludum Dare #24
@@ -19,6 +22,9 @@ public:
 
 	void Update(float dt);
 	void Render();
+
+	VertexBuffer vb;
+	Primitive prim;
 
 };
 

@@ -10,16 +10,25 @@
 #include "app.h"
 #include "opengl.h"
 #include "vertexbuffer.h"
+#include "primitives.h"
 
 App::App()
+:prim(vb)
 {
-	// TODO Auto-generated constructor stub
+	vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
+	vb.Update();
+
+	prim.Begin(GL_TRIANGLES);
+	prim.Add( {-1, 0, 0, 1, 0, 1, 0, 1} );
+	prim.Add( {0, 1, 0, 1, 1, 1, 0, 1} );
+	prim.Add( {1, 1, 0, 1, 1, 1, 0, 1} );
+	prim.End();
 
 }
 
 App::~App()
 {
-	// TODO Auto-generated destructor stub
+
 }
 
 void App::Update(float dt)
@@ -36,7 +45,6 @@ void App::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GLERR();
 
-	VertexBuffer vb;
-	vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
-	vb.Update();
+	prim.Draw();
+
 }

@@ -44,10 +44,6 @@ public:
 
 
 
-	float zoom = 30.0f;
-	float camx = 100.0f;
-	float camy = 100.0f;
-
 
 	bool mouse_dragging = false;
 
@@ -58,6 +54,18 @@ public:
 
 	void OnKeyDown(SDL_Keysym key);
 	void OnKeyUp(SDL_Keysym key);
+
+
+
+	float zoom = 30.0f;
+	float camx = 100.0f;
+	float camy = 100.0f;
+	glm::mat4 mapcam;
+	glm::mat4 invmapcam;
+
+
+	glm::vec2 hover;  //mouse position in world coords
+	void SetHover(int x, int y);
 };
 
 #endif /* _LASTY_LD24_APP_H_ */

@@ -56,6 +56,10 @@ void App::Update(float dt)
 	//LOGf("dt = %f", dt);
 
 	gamemap.SetAmbient(ambientcolour);
+
+	Tile *ht = gamemap.FindNearest(hover);
+	if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
+
 	gamemap.Update();
 
 }
@@ -75,7 +79,11 @@ void App::Render()
 	//orthographic projection to map to pixels on the window (top left is 0,0)
 	glm::mat4 ortho = glm::ortho(0.0f, 640.0f, 480.0f, 0.0f);
 
-	glm::mat4 mapcam = glm::scale(glm::translate( {}, glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
+
+	mapcam = glm::scale(glm::translate( {}, glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
+	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
+
+
 	gamemap.Draw(ortho, mapcam);
 
 //	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
@@ -99,6 +107,11 @@ void App::Render()
 //		font.Draw(ortho, -9, y, 1, std::string(6, ch));
 //	}
 
+//	//debugging hover
+//	glm::mat4 hovercam = glm::translate(mapcam, glm::vec3(hover, 0.0f));
+//	prog.SetCamera(ortho, hovercam);
+//	prog.Draw(prim);
+
 }
 
 void App::OnMouseDown(int x, int y, int button)
@@ -120,6 +133,8 @@ void App::OnMouseUp(int x, int y, int button)
 
 void App::OnMouseMotion(int x, int y, int dx, int dy)
 {
+	SetHover(x, y);
+
 	if (mouse_dragging)
 	{
 		camx += dx;
@@ -147,3 +162,17 @@ void App::OnKeyUp(SDL_Keysym key)
 
 
 }
+
+
+void App::SetHover(int x, int y)
+{
+	//must convert to xyzw vector first.. argh
+	glm::vec4 tmp(x, y, 0.0, 1.0);
+	tmp = tmp * invmapcam;
+
+	hover.x = tmp.x;
+	hover.y = tmp.y;
+
+	//LOGf("Hovering at world coords %.2f x %.2f", hover.x, hover.y);
+}
+

@@ -37,6 +37,9 @@ public:
 	Program program;
 	Image tiletexture;
 
+	int mapsizex = 0;
+	int mapsizey = 0;
+
 	std::vector<std::vector<Tile*>> map;
 
 	TileBoard();
@@ -52,6 +55,7 @@ public:
 	void SetAmbient(glm::vec3 col);
 	void Update();
 
+	Tile * FindNearest(glm::vec2 cursor);
 
 };
 

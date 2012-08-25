@@ -67,6 +67,9 @@ TileBoard::~TileBoard()
 void TileBoard::Create(int width, int height)
 {
 	Destroy();
+	mapsizex = width;
+	mapsizey = height;
+
 	for (int y = 0; y < height; y++)
 	{
 		std::vector<Tile*> row;
@@ -118,6 +121,7 @@ void TileBoard::SetAmbient(glm::vec3 col)
 	}
 }
 
+
 void TileBoard::Update()
 {
 	for (auto row : map)
@@ -130,4 +134,21 @@ void TileBoard::Update()
 
 	vb.Update();
 }
+
+
+Tile * TileBoard::FindNearest(glm::vec2 cursor)
+{
+	int x = cursor.x;
+	int y = cursor.y;
+
+	if (x < 0 or x >= mapsizex) return nullptr;
+	if (y < 0 or y >= mapsizey) return nullptr;
+
+	LOGf("Finding map tile %d, %d", x, y);
+	Tile *t = map[y][x];
+
+	return t;
+}
+
+
 

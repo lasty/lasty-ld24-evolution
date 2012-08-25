@@ -11,6 +11,7 @@
 #include "opengl.h"
 #include "vertexbuffer.h"
 #include "primitives.h"
+#include "program.h"
 
 App::App()
 :prim(vb)
@@ -21,9 +22,10 @@ App::App()
 	prim.Begin(GL_TRIANGLES);
 	prim.Add( {-1, 0, 0, 1, 0, 1, 0, 1} );
 	prim.Add( {0, 1, 0, 1, 1, 1, 0, 1} );
-	prim.Add( {1, 1, 0, 1, 1, 1, 0, 1} );
+	prim.Add( {1, 0, 0, 1, 1, 1, 0, 1} );
 	prim.End();
 
+	prog.LoadSource("basic.shader");
 }
 
 App::~App()
@@ -45,6 +47,8 @@ void App::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GLERR();
 
-	prim.Draw();
+	glm::mat4 m;
+	prog.SetCamera(m, m);
+	prog.Draw(prim);
 
 }

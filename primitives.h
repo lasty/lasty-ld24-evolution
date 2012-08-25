@@ -15,6 +15,8 @@
 
 class Primitive
 {
+	friend class Program;
+
 	VertexBuffer *vbuff;  //reference to vertex buffer
 
 	unsigned begin;  //offset to begin from

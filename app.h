@@ -4,6 +4,7 @@
 
 #include "vertexbuffer.h"
 #include "primitives.h"
+#include "program.h"
 
 /*  app
  * 
@@ -25,6 +26,7 @@ public:
 
 	VertexBuffer vb;
 	Primitive prim;
+	Program prog;
 
 };
 

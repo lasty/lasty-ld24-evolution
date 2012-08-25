@@ -14,11 +14,16 @@
  */
 
 //////////////////////////////////////////////////////////////////////////////
-
 //use GLEW library for opengl headers; see opengl.h
 #define USE_GLEW
 
 //////////////////////////////////////////////////////////////////////////////
+
+//#ifdef WIN32
+//#define DATA_DIR "..\\data\\"
+//#else
+#define DATA_DIR "../data/"
+//#endif //WIN32
 
 #include <stdio.h>
 
@@ -43,11 +48,29 @@ public:
 		return what;
 	}
 
-	virtual const char* EName() { return "Exception"; }
+	virtual const char* EName()
+	{
+		return "Exception";
+	}
+};
+
+class Assert : public Exception
+{
+public:
+	Assert(const char* what, const char* file, int line)
+	: Exception(what, file, line)
+	{
+	}
+
+	virtual const char* EName()
+	{
+		return "Assert";
+	}
 };
 
 //make throw include file/line
 #define THROW(exclass, what)throw(exclass(what, __FILE__, __LINE__));
+#define ASSERT(test,what) if (not (test)) THROW(Assert,what)
 
 //logging to stdout, disabled in optimized build
 #ifndef NDEBUG

@@ -98,6 +98,44 @@ void DumpException(Exception &e)
 }
 #endif
 
+
+#ifdef __WIN32__
+#include <unistd.h>
+#define WIN32_LEAN_AND_MEAN
+#include "windows.h"
+#include <windows.h>
+#include <psapi.h>
+#include <Shlwapi.h>
+
+void ChangeDirectoryToHere(char* argv0)
+{
+	char path[128];
+
+	GetModuleFileName(nullptr, path, sizeof(path));
+
+	*strrchr(path, '\\') = '\0';  //Chop off filename part
+
+	LOGf("My filename is %s", path);
+
+	chdir(path);
+}
+
+#else
+#include <unistd.h>
+
+//Add Change Directory for your platform here if necessary
+
+void ChangeDirectoryToHere(char* argv0)
+{
+	*strrchr(argv0, '\\') = '\0';  //Chop off filename part
+	LOGf("My path is %s", argv0);
+	chdir(argv0);
+}
+
+#endif
+
+
+
 int main(int argc, char *argv[])
 {
 	LOG("Hello LD world!");
@@ -106,6 +144,8 @@ int main(int argc, char *argv[])
 	int ret = 0;
 	try
 	{
+		ChangeDirectoryToHere(argv[0]);
+
 		ret = run(argc, argv);
 
 	}

@@ -108,6 +108,8 @@ public:
 
 	void SetTexture(Image *img);
 	void SetTexture(Image &img);
+	void UseTexture(Image *img);
+
 
 	void Draw(Primitive &p);
 

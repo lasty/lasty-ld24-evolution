@@ -226,7 +226,7 @@ void Program::DiscoverAttributes()
 	vertex_colour = glGetAttribLocation(program_id, "vertex_colour");
 	vertex_texcoords = glGetAttribLocation(program_id, "vertex_texcoords");
 	GLERR();
-	ASSERT(vertex_position != -1 and vertex_colour != -1, "GLSL Attributes Lookup failed");
+	ASSERT(vertex_position != -1 and vertex_colour != -1 and vertex_texcoords != -1, "GLSL Attributes Lookup failed");
 }
 
 void Program::DiscoverUniforms()
@@ -235,7 +235,7 @@ void Program::DiscoverUniforms()
 	modelview_matrix = glGetUniformLocation(program_id, "modelview_matrix");
 	texture_diffuse = glGetUniformLocation(program_id, "texture_diffuse");
 	GLERR();
-	ASSERT(projection_matrix != -1 and modelview_matrix != -1, "GLSL Uniforms Lookup failed");
+	ASSERT(projection_matrix != -1 and modelview_matrix != -1 and texture_diffuse != -1, "GLSL Uniforms Lookup failed");
 }
 
 
@@ -271,22 +271,33 @@ void Program::SetTexture(Image &img)
 	imgref = &img;
 }
 
+void Program::UseTexture(Image *img)
+{
+	img->Use();
+	glUniform1i(texture_diffuse, 0);
+	GLERR();
+}
+
 void Program::SetAttributes(Primitive &p)
 {
 	p.Use();  //select in the buffer
 
-	glVertexAttribPointer(vertex_position, 3, GL_FLOAT, GL_FALSE, p.vbuff->stride, (void *) offsetof(Vertex, x));
-	glVertexAttribPointer(vertex_colour, 3, GL_FLOAT, GL_FALSE, p.vbuff->stride, (void *) offsetof(Vertex, r));
-	glVertexAttribPointer(vertex_texcoords, 2, GL_FLOAT, GL_FALSE, p.vbuff->stride, (void *) offsetof(Vertex, u));
+	const auto stride = sizeof(Vertex);
+
+	glVertexAttribPointer(vertex_position, 3, GL_FLOAT, GL_FALSE, stride, (void *) offsetof(Vertex, x));
+	glVertexAttribPointer(vertex_colour, 3, GL_FLOAT, GL_FALSE, stride, (void *) offsetof(Vertex, r));
+	glVertexAttribPointer(vertex_texcoords, 2, GL_FLOAT, GL_FALSE, stride, (void *) offsetof(Vertex, u));
 
 	glEnableVertexAttribArray(vertex_position);
 	glEnableVertexAttribArray(vertex_colour);
-	//glEnableVertexAttribArray(vertex_texcoords);
+	glEnableVertexAttribArray(vertex_texcoords);
 }
 
 void Program::Draw(Primitive &p)
 {
 	Use();
+	if (imgref) UseTexture(imgref);
+
 	SetAttributes(p);
 	p.Draw();
 }

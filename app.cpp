@@ -16,16 +16,20 @@
 App::App()
 :prim(vb)
 {
-	vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
-	vb.Update();
+	//vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
+	//vb.Update();
 
-	prim.Begin(GL_TRIANGLES);
-	prim.Add( {-1, 0, 0, 1, 0, 1, 0, 1} );
-	prim.Add( {0, 1, 0, 1, 1, 1, 0, 1} );
-	prim.Add( {1, 0, 0, 1, 1, 1, 0, 1} );
+	prim.Begin(GL_QUADS);
+	prim.Add( { -1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0} );
+	prim.Add( { 1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 4.0, 0.0} );
+	prim.Add( { 1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 4.0, 4.0} );
+	prim.Add( { -1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 4.0} );
 	prim.End();
 
 	prog.LoadSource("basic.shader");
+
+	i.LoadFile("tex1.png");
+	prog.SetTexture(i);
 }
 
 App::~App()
@@ -35,7 +39,6 @@ App::~App()
 
 void App::Update(float dt)
 {
-
 	//LOGf("dt = %f", dt);
 }
 
@@ -47,8 +50,8 @@ void App::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GLERR();
 
-	glm::mat4 m;
-	prog.SetCamera(m, m);
+	glm::mat4 p, m;
+	prog.SetCamera(p, m);
 	prog.Draw(prim);
 
 }

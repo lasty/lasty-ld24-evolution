@@ -5,7 +5,7 @@ set(CMAKE_MODULE_PATH $(CMAKE_MODULE_PATH) "${CMAKE_CURRENT_LIST_DIR}/cmake")
 set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++ -Wno-comment" )
 
 set(SOURCES main.cpp app.cpp vertexbuffer.cpp primitives.cpp
-	 program.cpp)
+	 program.cpp image.cpp)
 set(DATA_DIRS data)
 
 
@@ -26,7 +26,7 @@ include_directories(${OPENGL_INCLUDE_DIR})
 #add glm maths library inline (header only lib)
 include_directories(${CMAKE_CURRENT_LIST_DIR}/libs/glm)
 
-target_link_libraries(evolution ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
+target_link_libraries(evolution ${SDL_LIBRARY} ${SDLIMAGE_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
 
 
 install(TARGETS evolution DESTINATION bin)

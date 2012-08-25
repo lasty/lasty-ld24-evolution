@@ -28,6 +28,8 @@ public:
 	Primitive prim;
 	Program prog;
 
+	Image i;
+
 };
 
 #endif /* _LASTY_LD24_APP_H_ */

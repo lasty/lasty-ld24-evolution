@@ -17,7 +17,7 @@ public:
 	virtual ~App();
 	bool running = true;
 
-	void Update();
+	void Update(float dt);
 	void Render();
 
 };

@@ -32,7 +32,6 @@ int run(int argc, char *argv[])
 
 	SDL_GL_SetSwapInterval(0);  //Disable vsync
 
-
 #ifdef USE_GLEW
 	if (glewInit() != GLEW_OK)
 	{
@@ -40,6 +39,7 @@ int run(int argc, char *argv[])
 	}
 #endif
 
+	long last_ticks = SDL_GetTicks();
 
 	{
 		App theapp;
@@ -56,10 +56,14 @@ int run(int argc, char *argv[])
 						theapp.running = false;
 					break;
 				}
-
 			}
 
-			theapp.Update();
+			long this_ticks = SDL_GetTicks();
+			float dt = (this_ticks - last_ticks) / 1000.0f;
+			if (dt > 1.0) dt = 1.0;
+			last_ticks = this_ticks;
+
+			theapp.Update(dt);
 
 			theapp.Render();
 
@@ -81,9 +85,11 @@ int run(int argc, char *argv[])
 #include "windows.h"
 void DumpException(Exception &e)
 {
+	printf("[%s:%d] %s caught! : %s\n", e.file, e.line, e.EName(), e.What());
+
 	std::ostringstream etxt;
-	etxt << e.EName() <<" caught! : ["<<e.file<<":"<<e.line<<"]";
-	MessageBox(nullptr,  e.What(),etxt.str().c_str(), 0);
+	etxt << "[" << e.file << ":" << e.line << "]\n" << e.What() ;
+	MessageBox(nullptr, etxt.str().c_str(), e.EName(), 0);
 }
 #else
 void DumpException(Exception &e)

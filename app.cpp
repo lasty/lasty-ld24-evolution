@@ -9,6 +9,7 @@
 
 #include "app.h"
 #include "opengl.h"
+#include "vertexbuffer.h"
 
 App::App()
 {
@@ -21,12 +22,21 @@ App::~App()
 	// TODO Auto-generated destructor stub
 }
 
-void App::Update() {}
+void App::Update(float dt)
+{
 
-void App::Render() {
+	//LOGf("dt = %f", dt);
+}
+
+void App::Render()
+{
 
 	glClearColor(0.3, 0.4, 0.5, 1.0);
 
 	glClear(GL_COLOR_BUFFER_BIT);
+	GLERR();
 
+	VertexBuffer vb;
+	vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
+	vb.Update();
 }

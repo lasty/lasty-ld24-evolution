@@ -25,5 +25,25 @@
 
 #endif
 
+class GLError : public Exception
+{
+public:
+	GLError(const char*what, const char*file, int line)
+	: Exception(what, file, line) { }
+
+	const char* EName() { return "GLError"; }
+};
+
+inline void GLCheckError(const char* file, int line)
+{
+	auto e = glGetError();
+	if (e != GL_NO_ERROR)
+	{
+		throw GLError((const char*)gluErrorString(e), file, line);
+	}
+}
+
+#define GLERR()GLCheckError(__FILE__,__LINE__)
+
 
 #endif /* _LASTY_LD24_OPENGL_H_ */

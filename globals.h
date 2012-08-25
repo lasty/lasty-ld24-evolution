@@ -42,6 +42,8 @@ public:
 	{
 		return what;
 	}
+
+	virtual const char* EName() { return "Exception"; }
 };
 
 //make throw include file/line

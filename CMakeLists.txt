@@ -13,6 +13,7 @@ include_directories( "/usr/local/include" )
 add_executable(evolution ${SOURCES})
 
 find_package(SDL2)
+find_package(SDL2_image)
 include_directories( ${SDL_INCLUDE_DIR} )
 
 find_package(GLEW)
@@ -22,7 +23,7 @@ find_package(OPENGL)
 include_directories(${OPENGL_INCLUDE_DIR})
 
 
-target_link_libraries(evolution ${SDL_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
+target_link_libraries(evolution ${SDL_LIBRARY} ${SDL_IMAGE_LIBRARY} ${GLEW_LIBRARY} ${OPENGL_LIBRARY})
 
 
 install(TARGETS evolution DESTINATION bin)
@@ -32,8 +33,12 @@ install(DIRECTORY ${DATA_DIRS} DESTINATION data)
 if(MSYS OR MINGW)
 	#gather and install all required DLLs to binary directory
 	find_file(SDL_DLL SDL2.dll)
-		
-	set (DLL_ALL ${SDL_DLL})
+	find_file(SDLIMAGE_DLL SDL2_image.dll)
+	find_file(DLL_GLEW glew32.dll)
+	find_file(DLL_PNG libpng15-15.dll)
+	find_file(DLL_ZLIB zlib1.dll)
+	
+	set (DLL_ALL ${SDL_DLL} ${SDLIMAGE_DLL} ${DLL_GLEW} ${DLL_PNG} ${DLL_ZLIB})
 	
 	install(FILES ${DLL_ALL} DESTINATION bin)
 endif(MSYS OR MINGW)

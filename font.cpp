@@ -32,10 +32,10 @@ Primitive* Font::CreateGlyph(char ch, int xoff, int yoff, int xgrid, int ygrid)
 	Primitive* glyph = new Primitive(vb);
 
 	glyph->Begin(GL_QUADS);
-	glyph->Add( {-glw, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, u, v});  //topleft
-	glyph->Add( {+glw, -1.0f, 0.0f, 1.0f, 1.0f, 1.0f, u + xwidth, v});  //topright
-	glyph->Add( {+glw, +1.0f, 0.0f, 1.0f, 1.0f, 1.0f, u + xwidth, v + ywidth});  //botright
-	glyph->Add( {-glw, +1.0f, 0.0f, 1.0f, 1.0f, 1.0f, u, v + ywidth});  //botleft
+	glyph->Add( {-glw, -1.0f, 0.0f, 1.1f, 1.1f, 1.1f, u, v});  //topleft
+	glyph->Add( {+glw, -1.0f, 0.0f, 1.1f, 1.1f, 1.1f, u + xwidth, v});  //topright
+	glyph->Add( {+glw, +1.0f, 0.0f, 0.8f, 0.8f, 0.9f, u + xwidth, v + ywidth});  //botright
+	glyph->Add( {-glw, +1.0f, 0.0f, 0.8f, 0.8f, 0.9f, u, v + ywidth});  //botleft
 	glyph->End();
 
 	//adjust advance width  (still needs work but its close enough)

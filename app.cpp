@@ -59,13 +59,25 @@ void App::Render()
 	prog.Draw(prim);
 
 
-	glm::mat4 ortho = glm::ortho(-20.0f, 20.0f, 10.0f, -10.0f);
+	//orthographic projection to map to pixels on the window (top left is 0,0)
+	glm::mat4 ortho = glm::ortho(0.0f, 640.0f, 480.0f, 0.0f);
 
-	//font.program.SetCamera(ortho, m);
+	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
+	font.Draw(ortho, 300, 40, 16, "the quick brown fox jumps over the lazy dog,");
+	font.Draw(ortho, 300, 60, 10, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
 
-	font.Draw(ortho, m, "Hello World");
+	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
+	font.Draw(ortho, 50, 140, 30, "(Evolution)");
 
-	font.Draw(ortho, -15, -3, 3, "12345678910, 11, 12");
+//	char ch = '0';
+//	for (int y = 10;  ch <= '9'; y+= 30, ch++)
+//	{
+//		font.Draw(ortho, 20, y, 30, std::string(6, ch));
+//	}
 
-
+//	ch = 'r';
+//	for (int y = -9;  y < 9 and ch <= 'z'; y++, ch++)
+//	{
+//		font.Draw(ortho, -9, y, 1, std::string(6, ch));
+//	}
 }

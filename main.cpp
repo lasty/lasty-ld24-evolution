@@ -74,11 +74,11 @@ int run(int argc, char *argv[])
 					break;
 
 					case SDL_KEYDOWN:
-						theapp.OnKeyDown(event.key.keysym);
+						theapp.OnKeyDown((SDL_Keysym)event.key.keysym);
 					break;
 
 					case SDL_KEYUP:
-						theapp.OnKeyUp(event.key.keysym);
+						theapp.OnKeyUp((SDL_Keysym)event.key.keysym);
 					break;
 				}
 			}

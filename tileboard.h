@@ -17,15 +17,17 @@
 
 class Tile : public Primitive
 {
+	glm::vec3 colour;
 	glm::vec3 ambient_colour;
 
 public:
 
 	Tile(VertexBuffer* vb, int x, int y);
 
+	void SetDynamic(const glm::vec3 &col);
 	void SetAmbient(const glm::vec3 &col);
-	void UpdateAmbient();
 
+	void Update();
 	void UpdateColour(const glm::vec3 &col);
 
 };
@@ -55,8 +57,10 @@ public:
 	void SetAmbient(glm::vec3 col);
 	void Update();
 
-	Tile * FindNearest(glm::vec2 cursor);
+	Tile * FindNearest(const glm::vec2 &cursor);  //find nearest tile from world coordinates cursor
 
+
+	void DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius);
 };
 
 

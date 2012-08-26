@@ -40,12 +40,12 @@ Primitive* Font::CreateGlyph(char ch, int xoff, int yoff, int xgrid, int ygrid)
 
 	//adjust advance width  (still needs work but its close enough)
 	float aw = 0.8f;
-	if (std::string(",.").find(ch) != std::string::npos) aw = 0.5f;
+	//if (std::string(",.").find(ch) != std::string::npos) aw = 0.5f;
 	if (std::string("abh").find(ch) != std::string::npos) aw = 0.8f;
-	if (std::string("IJZEi1()").find(ch) != std::string::npos) aw = 0.7f;
+	if (std::string("IJZE1()").find(ch) != std::string::npos) aw = 0.7f;
 	if (std::string("tpfr").find(ch) != std::string::npos) aw = 0.6f;
-	if (std::string("lj").find(ch) != std::string::npos) aw = 0.6f;
-	if (std::string("WMwm").find(ch) != std::string::npos) aw = 1.0f;
+	if (std::string("lji").find(ch) != std::string::npos) aw = 0.6f;
+	if (std::string(",.WMwm").find(ch) != std::string::npos) aw = 1.0f;
 
 	advancewidth[ch] = aw;
 	return glyph;
@@ -102,7 +102,7 @@ void Font::Draw(char ch)
 {
 	if (glyphs.count(ch) == 0)
 	{
-		if (ch != ' ') LOGf("GLYPH '%c' not in font", ch);
+		if (ch != ' ' and ch != '-') LOGf("GLYPH '%c' not in font", ch);
 		return;
 	}
 

@@ -27,12 +27,17 @@ Tile::Tile(VertexBuffer* vb, int x, int y)
 
 void Tile::SetAmbient(const glm::vec3 &col)
 {
-	ambient_colour = col;
+	ambient_colour = colour = col;
 }
 
-void Tile::UpdateAmbient()
+void Tile::SetDynamic(const glm::vec3 &col)
 {
-	UpdateColour(ambient_colour);
+	colour += col;
+}
+
+void Tile::Update()
+{
+	UpdateColour(colour);
 }
 
 void Tile::UpdateColour(const glm::vec3 &col)
@@ -128,7 +133,7 @@ void TileBoard::Update()
 	{
 		for (auto cell : row)
 		{
-			cell->UpdateAmbient();
+			cell->Update();
 		}
 	}
 
@@ -136,19 +141,53 @@ void TileBoard::Update()
 }
 
 
-Tile * TileBoard::FindNearest(glm::vec2 cursor)
+Tile * TileBoard::FindNearest(const glm::vec2 &cursor)
 {
-	int x = cursor.x;
-	int y = cursor.y;
+	int x = roundf(cursor.x);
+	int y = roundf(cursor.y);
 
 	if (x < 0 or x >= mapsizex) return nullptr;
 	if (y < 0 or y >= mapsizey) return nullptr;
 
-	LOGf("Finding map tile %d, %d", x, y);
+	//LOGf("Finding map tile %d, %d", x, y);
+
 	Tile *t = map[y][x];
 
 	return t;
 }
 
+void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius)
+{
+	float maxb = 0.0f, minb = 1.0f;
 
+	for (int ix = 0;  ix < mapsizex;  ++ix)
+	{
+		float x = ix;
+
+		for (int iy = 0; iy < mapsizey; ++iy)
+		{
+			float y = iy;
+			glm::vec2 current(x,y);
+
+			Tile *t = map[y][x];
+
+			float distance = glm::distance(position, glm::vec2(x,y));
+
+			if (distance > radius) continue;
+
+			float brightness = 1.0f - (distance / radius);  //brightness scale from 1 -> 0
+
+			glm::vec3 falloffcol = colour * brightness;
+
+			t->SetDynamic(falloffcol);
+			t->Update();
+
+			maxb = glm::max(maxb, brightness);
+			minb = glm::min(minb, brightness);
+
+		}
+	}
+
+	LOGf("min brigtness %.2f   max brightness %.2f", minb, maxb);
+}
 

@@ -15,6 +15,9 @@
 
 #include "tileboard.h"
 
+#include <sstream>
+#include <iomanip>
+
 #include <math.h>
 #include <gtc/matrix_transform.hpp>
 
@@ -57,8 +60,10 @@ void App::Update(float dt)
 
 	gamemap.SetAmbient(ambientcolour);
 
-	Tile *ht = gamemap.FindNearest(hover);
-	if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
+	//Tile *ht = gamemap.FindNearest(hover);
+	//if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
+
+	gamemap.DynamicLight(hover, glm::vec3(5.0f, 5.0f, 4.5f), 5.0f);
 
 	gamemap.Update();
 
@@ -93,7 +98,11 @@ void App::Render()
 
 	font.Draw(ortho, 220, 25, 30, "(Evolution)");
 
-	font.Draw(ortho, 10, 470, 12, "This is some status line text.");
+	std::stringstream cursorpos;
+	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
+	cursorpos << "("<<hover.x<<","<<hover.y<<")";
+
+	font.Draw(ortho, 10, 470, 12, "This is some status line text.  42  "+cursorpos.str());
 
 //	char ch = '0';
 //	for (int y = 10;  ch <= '9'; y+= 30, ch++)

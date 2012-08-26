@@ -23,6 +23,8 @@
 
 #include "colours.h"
 
+#include "entity.h"
+
 App::App()
 : prim(vb)
 {
@@ -46,11 +48,27 @@ App::App()
 	gamemap.Create(160, 90);
 
 	ChangeLight(0);
+
+	//Factory::GetInstance().program1.SetTexture(&gamemap.tiletexture);
+
+	player = new Player();
+
+	player->x = 5.0f;
+	player->y = 5.0f;
+	player->zoom = 1.0f;
+	player->SetModelMatrix();
+
+	entities.push_back(player);
+
+
 }
 
 App::~App()
 {
-
+	for(auto *i: entities)
+	{
+		delete i;
+	}
 }
 
 
@@ -59,12 +77,19 @@ void App::Update(float dt)
 {
 	runtime += dt;
 
+	//orthographic projection to map to pixels on the window (top left is 0,0)
 	ortho = glm::ortho(0.0f, float(APP_WIDTH), float(APP_HEIGHT), 0.0f);
 
 	mapcam = glm::scale(glm::translate( glm::mat4(), glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
 	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
 
+	for (Entity *e : entities)
+	{
+		e->Update(dt);
+	}
+
 	UpdateWorld();
+
 }
 
 
@@ -78,7 +103,6 @@ void App::UpdateWorld()
 	ambientcolour[1] = cosf(runtime);
 	ambientcolour[2] = 0.8f;
 
-	//LOGf("dt = %f", dt);
 
 	gamemap.SetAmbient(ambientcolour);
 
@@ -127,7 +151,7 @@ void App::RenderWorld()
 {
 
 	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
-//	gamemap.Draw(ortho, mapcam);
+
 
 }
 
@@ -139,13 +163,18 @@ void App::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GLERR();
 
-//	glm::mat4 p, m;
-//	prog.SetCamera(p, m);
+	//glm::mat4 p, m;
+	//prog.SetCamera(ortho, m);
 	//prog.Draw(prim);
 
-	//orthographic projection to map to pixels on the window (top left is 0,0)
 
 	RenderWorld();
+
+	for (Entity *e : entities)
+	{
+		e->Draw(ortho, mapcam);
+	}
+
 
 	RenderGUI();
 
@@ -161,6 +190,7 @@ void App::RenderGUI()
 
 		font.Draw(ortho, APP_WIDTH / 2 - 100, 25, 30, "(Evolution)");
 
+		//render the bottom panel to make text easier to read
 		prog.SetCamera(ortho, {});
 		prog.Draw(prim);
 
@@ -193,6 +223,14 @@ void App::RenderGUI()
 	//	prog.SetCamera(ortho, hovercam);
 	//	prog.Draw(prim);
 
+}
+
+void App::PlayerMove(float dx, float dy)
+{
+	player->x += dx;
+	player->y += dy;
+
+	player->SetModelMatrix();
 }
 
 void App::OnMouseDown(int x, int y, int button)
@@ -256,6 +294,15 @@ void App::OnKeyDown(SDL_Keysym key)
 	if (key.sym == SDLK_EQUALS) current_light_radius += 1.0f;
 
 
+	float dx = 0.0;
+	float dy = 0.0;
+
+	if (key.sym == SDLK_LEFT or key.sym == SDLK_a) dx -= 1.0f;
+	if (key.sym == SDLK_RIGHT or key.sym == SDLK_d) dx += 1.0f;
+	if (key.sym == SDLK_UP or key.sym == SDLK_w) dy -= 1.0f;
+	if (key.sym == SDLK_DOWN or key.sym == SDLK_s) dy += 1.0f;
+
+	if (dx or dy) { PlayerMove(dx, dy); }
 }
 
 void App::OnKeyUp(SDL_Keysym key)

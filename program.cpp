@@ -122,7 +122,7 @@ void Program::Use()
 
 void Program::LoadSource(const std::string &filename)
 {
-	LOGf("filename is: '%s'", filename.c_str());
+	//LOGf("filename is: '%s'", filename.c_str());
 	this->filename = filename;
 
 	std::ifstream in(std::string(DATA_DIR) + filename);

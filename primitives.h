@@ -15,10 +15,11 @@
 
 class Primitive
 {
+public:
+	VertexBuffer *vbuff;  //reference to vertex buffer
+
 protected:
 	friend class Program;
-
-	VertexBuffer *vbuff;  //reference to vertex buffer
 
 	unsigned begin;  //offset to begin from
 	unsigned count;  //number of elements to draw (vertexes)

@@ -9,6 +9,9 @@
 
 #include "tileboard.h"
 
+#include "entity.h"
+
+
 #include <SDL2/SDL.h>
 
 /*  app
@@ -52,6 +55,11 @@ public:
 
 	TileBoard gamemap;
 
+
+	std::vector<Entity*> entities;
+	Player *player;
+
+
 	float runtime = 0.0f;
 	glm::vec3 ambientcolour;
 
@@ -67,6 +75,7 @@ public:
 	bool mouse_dragging = false;
 	bool mouse_dragging_lights = false;
 
+	void PlayerMove(float dx, float dy);
 
 
 	void OnMouseDown(int x, int y, int button);

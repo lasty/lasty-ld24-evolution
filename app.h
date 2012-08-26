@@ -19,6 +19,13 @@
  *      Author: Lasty
  */
 
+struct DLight
+{
+	glm::vec2 position;
+	glm::vec3 colour;
+	float radius;
+};
+
 class App
 {
 public:
@@ -28,6 +35,11 @@ public:
 
 	void Update(float dt);
 	void Render();
+
+	void RenderWorld();
+	void UpdateWorld();
+
+	glm::mat4 ortho;
 
 	VertexBuffer vb;
 	Primitive prim;
@@ -42,7 +54,8 @@ public:
 	float runtime = 0.0f;
 	glm::vec3 ambientcolour;
 
-
+	std::vector<DLight> dlights;
+	void AddDlight(glm::vec2 pos);
 
 
 	bool mouse_dragging = false;

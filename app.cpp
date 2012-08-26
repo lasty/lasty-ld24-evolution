@@ -54,6 +54,16 @@ void App::Update(float dt)
 {
 	runtime += dt;
 
+	ortho = glm::ortho(0.0f, 640.0f, 480.0f, 0.0f);
+
+	mapcam = glm::scale(glm::translate( glm::mat4(), glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
+	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
+
+	UpdateWorld();
+}
+
+void App::UpdateWorld()
+{
 	ambientcolour[0] = sinf(runtime);
 	ambientcolour[1] = cosf(runtime);
 	ambientcolour[2] = 0.8f;
@@ -67,7 +77,30 @@ void App::Update(float dt)
 
 	gamemap.DynamicLight(hover, glm::vec3(5.0f, 5.0f, 4.5f), 5.0f);
 
+	for (auto &l : dlights)
+	{
+		gamemap.DynamicLight(l.position, l.colour, l.radius);
+	}
+
 	gamemap.Update();
+
+}
+
+void App::AddDlight(glm::vec2 pos)
+{
+	DLight d{pos, glm::vec3(5.0f, 5.0f, 4.5f), 5.0f};
+	dlights.push_back(d);
+}
+
+void App::RenderWorld()
+{
+
+	//Doing some rudimentary bounds checking in the case of huge maps
+	glm::vec2 topleft = ScreenToWorld(0,0);
+	glm::vec2 botright = ScreenToWorld(640, 480);
+
+	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
+//	gamemap.Draw(ortho, mapcam);
 
 }
 
@@ -79,23 +112,13 @@ void App::Render()
 	glClear(GL_COLOR_BUFFER_BIT);
 	GLERR();
 
-	glm::mat4 p, m;
-	prog.SetCamera(p, m);
+//	glm::mat4 p, m;
+//	prog.SetCamera(p, m);
 	//prog.Draw(prim);
 
 	//orthographic projection to map to pixels on the window (top left is 0,0)
-	glm::mat4 ortho = glm::ortho(0.0f, 640.0f, 480.0f, 0.0f);
 
-
-	mapcam = glm::scale(glm::translate( {}, glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
-	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
-
-
-	//Doing some rudimentary bounds checking in the case of huge maps
-	glm::vec2 topleft = ScreenToWorld(0,0);
-	glm::vec2 botright = ScreenToWorld(640, 480);
-
-	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
+	RenderWorld();
 
 
 //	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
@@ -108,7 +131,7 @@ void App::Render()
 
 	std::stringstream cursorpos;
 	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
-	cursorpos << "("<<hover.x<<","<<hover.y<<")";
+	cursorpos << "("<<hover.x<<","<<hover.y<<")  Dynamic Lights: " << dlights.size();
 
 	font.Draw(ortho, 10, 470, 12, "This is some status line text.  42  "+cursorpos.str());
 
@@ -145,7 +168,10 @@ void App::OnMouseUp(int x, int y, int button)
 	{
 		mouse_dragging = false;
 	}
-
+	if (button == 1)
+	{
+		AddDlight(hover);
+	}
 }
 
 void App::OnMouseMotion(int x, int y, int dx, int dy)

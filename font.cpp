@@ -131,7 +131,7 @@ void Font::Draw(const glm::mat4& proj, const glm::mat4& mv_orig, const std::stri
 		program.SetModelViewMatrix(mv);
 		Draw(ch);
 		float aw = advancewidth[ch];
-		if (aw == 0.0f) aw = 0.8f;
+		if (aw == 0.0f) aw = 0.6f;
 
 		mv = glm::translate(mv, glm::vec3 {aw, 0.0f, 0.0f});
 	}

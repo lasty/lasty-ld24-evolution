@@ -36,6 +36,7 @@ public:
 	void Update(float dt);
 	void Render();
 
+	void RenderGUI();
 	void RenderWorld();
 	void UpdateWorld();
 
@@ -61,6 +62,7 @@ public:
 	float current_light_radius = 5.0f;
 	int current_light_index = 0;
 	std::string CurrentLightName = "TBA";
+	int cull_count = 0;
 
 	bool mouse_dragging = false;
 	bool mouse_dragging_lights = false;
@@ -83,6 +85,8 @@ public:
 	glm::mat4 mapcam;
 	glm::mat4 invmapcam;
 
+	glm::vec2 topleft;  //topleft worldcoords on screen
+	glm::vec2 botright; //bottom right worldcoords on screen
 
 	glm::vec2 hover;  //mouse position in world coords
 	void SetHover(int x, int y);

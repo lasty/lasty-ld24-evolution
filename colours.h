@@ -19,6 +19,7 @@
 
 static glm::vec3 white(1.0f, 1.0f, 1.0f);
 
+static glm::vec3 gui_background(0.4f, 0.8f, 0.9f);
 
 
 static glm::vec3 light_white(5.0f, 5.0f, 5.0f);

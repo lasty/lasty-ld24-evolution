@@ -28,18 +28,19 @@ App::App()
 {
 	//vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
 	//vb.Update();
-
+	float sbh = 60;
+	glm::vec3 c = gui_background;
 	prim.Begin(GL_QUADS);
-	prim.Add( {-1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0});
-	prim.Add( {1.0, -1.0, 0.0, 1.0, 1.0, 1.0, 4.0, 0.0});
-	prim.Add( {1.0, 1.0, 0.0, 1.0, 1.0, 1.0, 4.0, 4.0});
-	prim.Add( {-1.0, 1.0, 0.0, 0.0, 1.0, 1.0, 0.0, 4.0});
+	prim.Add( {0.0, APP_HEIGHT-sbh, 0.0, c.r, c.g, c.b, 0.0, 0.0});
+	prim.Add( {APP_WIDTH, APP_HEIGHT-sbh, 0.0, c.r, c.g, c.b, 16.0, 0.0});
+	prim.Add( {APP_WIDTH, APP_HEIGHT, 0.0, c.r, c.g, c.b, 16.0, 1.0});
+	prim.Add( {0.0, APP_HEIGHT, 0.0, c.r, c.g, c.b, 0.0, 1.0});
 	prim.End();
 
 	prog.LoadSource("basic.shader");
 	i.LoadFile("tex1.png");
+	i.SetBlend(GL_ONE_MINUS_SRC_COLOR,GL_SRC_COLOR);
 	//i.LoadFile("font.png");
-
 	prog.SetTexture(i);
 
 	gamemap.Create(160, 90);
@@ -66,8 +67,13 @@ void App::Update(float dt)
 	UpdateWorld();
 }
 
+
 void App::UpdateWorld()
 {
+	//Doing some rudimentary bounds checking in the case of huge maps
+	topleft = ScreenToWorld(0,0);
+	botright = ScreenToWorld(APP_WIDTH, APP_HEIGHT);
+
 	ambientcolour[0] = sinf(runtime);
 	ambientcolour[1] = cosf(runtime);
 	ambientcolour[2] = 0.8f;
@@ -81,8 +87,21 @@ void App::UpdateWorld()
 
 	gamemap.DynamicLight(hover, current_light_colour, current_light_radius);
 
+	cull_count = 0;
+
 	for (auto &l : dlights)
 	{
+		//Cull lights we don't see on screen
+		const float left = (l.position.x - l.radius);
+		const float right = (l.position.x + l.radius);
+
+		if ((left > botright.x) or (right < topleft.x)) { cull_count++; continue;}
+
+		const float top = (l.position.y - l.radius);
+		const float bot = (l.position.y + l.radius);
+
+		if ((top > botright.y) or (bot < topleft.y)) { cull_count++; continue;}
+
 		gamemap.DynamicLight(l.position, l.colour, l.radius);
 	}
 
@@ -107,10 +126,6 @@ void App::ChangeLight(int inc)
 void App::RenderWorld()
 {
 
-	//Doing some rudimentary bounds checking in the case of huge maps
-	glm::vec2 topleft = ScreenToWorld(0,0);
-	glm::vec2 botright = ScreenToWorld(APP_WIDTH, APP_HEIGHT);
-
 	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
 //	gamemap.Draw(ortho, mapcam);
 
@@ -132,43 +147,51 @@ void App::Render()
 
 	RenderWorld();
 
+	RenderGUI();
 
-//	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
-//	font.Draw(ortho, 300, 40, 16, "the quick brown fox jumps over the lazy dog,");
-//	font.Draw(ortho, 300, 60, 10, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
-//	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
+}
 
-
-	font.Draw(ortho, APP_WIDTH / 2 - 100, 25, 30, "(Evolution)");
-
-	std::stringstream cursorpos;
-	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
-	cursorpos << "("<<hover.x<<","<<hover.y<<")  Dynamic Lights " << dlights.size();
-
-	font.Draw(ortho, 10, APP_HEIGHT - 12 , 12, "This is some status line text.  42  "+cursorpos.str());
-
-	std::stringstream status_light;
-	status_light << "(Current light Colour) " << CurrentLightName  <<  "Current radius " << current_light_radius;
-
-	font.Draw(ortho, 10, APP_HEIGHT - 42 , 12, status_light.str());
+void App::RenderGUI()
+{
+	//	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
+	//	font.Draw(ortho, 300, 40, 16, "the quick brown fox jumps over the lazy dog,");
+	//	font.Draw(ortho, 300, 60, 10, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
+	//	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
 
 
-//	char ch = '0';
-//	for (int y = 10;  ch <= '9'; y+= 30, ch++)
-//	{
-//		font.Draw(ortho, 20, y, 30, std::string(6, ch));
-//	}
+		font.Draw(ortho, APP_WIDTH / 2 - 100, 25, 30, "(Evolution)");
 
-//	ch = 'r';
-//	for (int y = -9;  y < 9 and ch <= 'z'; y++, ch++)
-//	{
-//		font.Draw(ortho, -9, y, 1, std::string(6, ch));
-//	}
+		prog.SetCamera(ortho, {});
+		prog.Draw(prim);
 
-//	//debugging hover
-//	glm::mat4 hovercam = glm::translate(mapcam, glm::vec3(hover, 0.0f));
-//	prog.SetCamera(ortho, hovercam);
-//	prog.Draw(prim);
+		std::stringstream cursorpos;
+		cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
+		cursorpos << "("<<hover.x<<","<<hover.y<<")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count <<" offscreen lights)";
+
+		font.Draw(ortho, 10, APP_HEIGHT - 12 , 12, "This is some status line text.  42  "+cursorpos.str());
+
+		std::stringstream status_light;
+		status_light << "(Current light Colour) " << CurrentLightName  <<  "Current radius " << current_light_radius;
+
+		font.Draw(ortho, 10, APP_HEIGHT - 42 , 12, status_light.str());
+
+
+	//	char ch = '0';
+	//	for (int y = 10;  ch <= '9'; y+= 30, ch++)
+	//	{
+	//		font.Draw(ortho, 20, y, 30, std::string(6, ch));
+	//	}
+
+	//	ch = 'r';
+	//	for (int y = -9;  y < 9 and ch <= 'z'; y++, ch++)
+	//	{
+	//		font.Draw(ortho, -9, y, 1, std::string(6, ch));
+	//	}
+
+	//	//debugging hover
+	//	glm::mat4 hovercam = glm::translate(mapcam, glm::vec3(hover, 0.0f));
+	//	prog.SetCamera(ortho, hovercam);
+	//	prog.Draw(prim);
 
 }
 

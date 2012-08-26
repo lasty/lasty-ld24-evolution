@@ -9,6 +9,8 @@
 
 #include "font.h"
 
+#include "colours.h"
+
 Font::Font()
 {
 	SetupFont();

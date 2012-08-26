@@ -13,6 +13,7 @@
 #include "opengl.h"
 
 #include <SDL2/SDL_image.h>
+#include <glm.hpp>
 
 class Image
 {
@@ -38,6 +39,8 @@ public:
 
 
 	void SetBlend(GLenum f1, GLenum f2);
+
+	static glm::mat4x2 GetGridUV(int x, int y, int xtiles, int ytiles, int res);
 
 };
 

@@ -9,6 +9,7 @@
 
 #include "image.h"
 #include <string>
+#include <glm.hpp>
 
 Image::Image()
 {
@@ -93,3 +94,28 @@ void Image::SetBlend(GLenum f1, GLenum f2)
 	blendfunc1 = f1;
 	blendfunc2 = f2;
 }
+
+glm::mat4x2 Image::GetGridUV(int xoff, int yoff, int xtiles, int ytiles, int res)
+{
+	float xwidth = 1.0f / float(xtiles);
+	float ywidth = 1.0f / float(ytiles);
+
+	float u = float(xoff) / float(xtiles);
+	float v = float(yoff) / float(ytiles);
+
+
+	//theres some overlap with bilinear filtering, so move to center of pixels
+	float pixelsize = 1.0f / float(res);
+	float nudge = pixelsize;// / 2.0f;
+
+	xwidth -= 2*nudge;
+	ywidth -= 2*nudge;
+
+	u += nudge;
+	v += nudge;
+
+	return glm::mat4x2( u, v, u + xwidth, v,  u + xwidth, v + ywidth, u, v + ywidth);
+}
+
+
+

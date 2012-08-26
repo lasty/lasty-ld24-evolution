@@ -56,9 +56,16 @@ public:
 
 	std::vector<DLight> dlights;
 	void AddDlight(glm::vec2 pos);
-
+	void ChangeLight(int inc);
+	glm::vec3 current_light_colour;
+	float current_light_radius = 5.0f;
+	int current_light_index = 0;
+	std::string CurrentLightName = "TBA";
 
 	bool mouse_dragging = false;
+	bool mouse_dragging_lights = false;
+
+
 
 	void OnMouseDown(int x, int y, int button);
 	void OnMouseUp(int x, int y, int button);

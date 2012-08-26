@@ -15,6 +15,20 @@
 #include "program.h"
 #include "image.h"
 
+struct TileDef
+{
+	glm::mat4x2 uv;
+	bool blocks_light;
+
+	TileDef(int x, int y, int xtiles, int ytiles, bool blockslight)
+	:uv(Image::GetGridUV(x,y,xtiles,ytiles, 512)), blocks_light(blockslight)
+	{}
+};
+
+static TileDef tile_floor1(0,0,4,4, false);
+static TileDef tile_floor2(1,0,4,4, false);
+static TileDef tile_wall1(2,0,4,4, true);
+
 class Tile : public Primitive
 {
 protected:
@@ -24,6 +38,9 @@ protected:
 	glm::vec3 ambient_colour;
 
 	bool dirty = true;
+
+	bool block_light = false;
+
 public:
 
 	Tile(VertexBuffer* vb, int x, int y);
@@ -33,6 +50,9 @@ public:
 
 	void Update();
 	void UpdateColour(const glm::vec3 &col);
+
+
+	void SetUV(const TileDef &t);
 
 };
 
@@ -63,10 +83,26 @@ public:
 	void Update();
 
 	Tile * FindNearest(const glm::vec2 &cursor);  //find nearest tile from world coordinates cursor
+	inline bool IsBlocking(int px, int py);
 
+	int CheckBlockPath(int x1, int y1, int x2, int y2);  //find any blocked tiles in a line
 
 	void DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius);
+
+	void GenerateTerrain();
 };
 
+bool TileBoard::IsBlocking(int px, int py)
+{
+	if (px < 0 or px >= mapsizex or py < 0 or py >= mapsizey)
+	{
+		return true;
+	}
+	else
+	{
+		Tile * t = map[py][px];
+		return t->block_light;
+	}
+}
 
 #endif /* _LASTY_LD24_TILEBOARD_H_ */

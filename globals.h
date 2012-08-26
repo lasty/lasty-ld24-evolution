@@ -27,6 +27,19 @@
 
 #define APP_TITLE "Evolution (LD24)"
 
+//no time to implement res changes
+#ifdef boring
+#define APP_WIDTH 640
+#define APP_HEIGHT 480
+#elif better
+#define APP_WIDTH 800
+#define APP_HEIGHT 600
+#else //best! widescreen
+#define APP_WIDTH 1280
+#define APP_HEIGHT 700
+
+#endif
+
 #include <stdio.h>
 
 class Exception

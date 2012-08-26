@@ -64,7 +64,7 @@ public:
 	glm::vec3 ambientcolour;
 
 	std::vector<DLight> dlights;
-	void AddDlight(glm::vec2 pos);
+	void AddDlight(glm::vec2 pos, glm::vec3 color, float radius);
 	void ChangeLight(int inc);
 	glm::vec3 current_light_colour;
 	float current_light_radius = 5.0f;
@@ -75,9 +75,6 @@ public:
 	bool mouse_dragging = false;
 	bool mouse_dragging_lights = false;
 
-	void PlayerMove(float dx, float dy);
-
-
 	void OnMouseDown(int x, int y, int button);
 	void OnMouseUp(int x, int y, int button);
 	void OnMouseWheel(int dx, int dy);
@@ -87,10 +84,25 @@ public:
 	void OnKeyUp(SDL_Keysym key);
 
 
+	void UpdatePlayer(float dt);
+	float player_move_speed = 4.0f;  //world units per second
+	void PlayerMove(float dx, float dy, float dt);
+
+	bool moving_left = false;
+	bool moving_right = false;
+	bool moving_up = false;
+	bool moving_down = false;
+	bool moving_running = false;
+
 
 	float zoom = 30.0f;
+	float target_zoom = 40.0f;
 	float camx = 100.0f;
+	float target_camx = 100.0f;
 	float camy = 100.0f;
+	float target_camy = 100.0f;
+
+	glm::mat4 cam;
 	glm::mat4 mapcam;
 	glm::mat4 invmapcam;
 

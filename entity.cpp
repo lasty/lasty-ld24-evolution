@@ -77,7 +77,7 @@ Entity::~Entity()
 
 void Entity::SetModelMatrix()
 {
-	//LOGf("setmodelmatrix x= %.2f y=%.2f rot=%.2f", x, y, rot);
+	LOGf("setmodelmatrix x= %.2f y=%.2f rot=%.2f", x, y, rot);
 
 	glm::mat4 t = glm::translate( glm::mat4(), glm::vec3( x, y, 0.0f) );
 	glm::mat4 r = glm::rotate( glm::mat4(), rot, glm::vec3(0.0f, 0.0f, 1.0f) );

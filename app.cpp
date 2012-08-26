@@ -33,15 +33,15 @@ App::App()
 	float sbh = 60;
 	glm::vec3 c = gui_background;
 	prim.Begin(GL_QUADS);
-	prim.Add( {0.0, APP_HEIGHT-sbh, 0.0, c.r, c.g, c.b, 0.0, 0.0});
-	prim.Add( {APP_WIDTH, APP_HEIGHT-sbh, 0.0, c.r, c.g, c.b, 16.0, 0.0});
+	prim.Add( {0.0, APP_HEIGHT - sbh, 0.0, c.r, c.g, c.b, 0.0, 0.0});
+	prim.Add( {APP_WIDTH, APP_HEIGHT - sbh, 0.0, c.r, c.g, c.b, 16.0, 0.0});
 	prim.Add( {APP_WIDTH, APP_HEIGHT, 0.0, c.r, c.g, c.b, 16.0, 1.0});
 	prim.Add( {0.0, APP_HEIGHT, 0.0, c.r, c.g, c.b, 0.0, 1.0});
 	prim.End();
 
 	prog.LoadSource("basic.shader");
 	i.LoadFile("tex1.png");
-	i.SetBlend(GL_ONE_MINUS_SRC_COLOR,GL_SRC_COLOR);
+	i.SetBlend(GL_ONE_MINUS_SRC_COLOR, GL_SRC_COLOR);
 	//i.LoadFile("font.png");
 	prog.SetTexture(i);
 
@@ -60,28 +60,65 @@ App::App()
 
 	entities.push_back(player);
 
-
 }
 
 App::~App()
 {
-	for(auto *i: entities)
+	for (auto *i : entities)
 	{
 		delete i;
 	}
 }
 
-
-
 void App::Update(float dt)
 {
 	runtime += dt;
 
+	zoom = (9*zoom + target_zoom) / 10.0f;
+
+	target_camx = player->x;
+	target_camy = player->y;
+
+	camx = (9*camx + target_camx) / 10.0f;
+	camy = (9*camy + target_camy) / 10.0f;
+
+
+	//Yep Im not sure what I did
+	//Too tired to work it out :)
+
+	//ortho -> 2d graphics, origin is top left of screen
+	//cam -> centered on player, origin is center of screen
+
+
 	//orthographic projection to map to pixels on the window (top left is 0,0)
 	ortho = glm::ortho(0.0f, float(APP_WIDTH), float(APP_HEIGHT), 0.0f);
 
-	mapcam = glm::scale(glm::translate( glm::mat4(), glm::vec3(camx, camy, 0.0f)), glm::vec3 {zoom});
-	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
+	//orthographic projection centered on the screen
+	//cam = glm::translate( ortho, glm::vec3(float(APP_WIDTH)/2.0, float(APP_HEIGHT)/2.0f, 0.0f));
+	glm::mat4 adj  = glm::translate( {} , glm::vec3(float(APP_WIDTH)/2.0, float(APP_HEIGHT)/2.0f, 0.0f));
+	cam = ortho * adj;
+
+
+	glm::mat4 s = glm::scale( glm::mat4(), glm::vec3 {zoom, zoom, 1.0f});
+	glm::mat4 t = glm::translate(glm::mat4(), glm::vec3(-camx, -camy, 0.0f));
+
+	//mapcam = glm::scale(glm::translate(glm::mat4(), glm::vec3(-camx, -camy, 0.0f)), glm::vec3 {zoom});
+	mapcam = s * t;
+
+	invmapcam =  mapcam._inverse() ;  //can't seem to find the proper access/function for this
+	//invmapcam = (cam * mapcam)._inverse(); //s * t;
+
+
+	//glm::mat4 is = glm::scale( {}, glm::vec3 {1.0/zoom});
+	//glm::mat4 it = glm::translate({}, glm::vec3(camx*zoom, camy*zoom, 0.0f));
+
+	//invmapcam = is* it;
+
+	//invmapcam = glm::inverse(ortho * mapcam);// * adj;
+
+	//invmapcam = glm::translate({}, glm::vec3(-float(APP_WIDTH)/2.0, -float(APP_HEIGHT)/2.0f, 0.0f)) * glm::inverse(cam);
+
+	UpdatePlayer(dt);
 
 	for (Entity *e : entities)
 	{
@@ -92,24 +129,29 @@ void App::Update(float dt)
 
 }
 
-
 void App::UpdateWorld()
 {
 	//Doing some rudimentary bounds checking in the case of huge maps
-	topleft = ScreenToWorld(0,0);
+	topleft = ScreenToWorld(0, 0);
 	botright = ScreenToWorld(APP_WIDTH, APP_HEIGHT);
 
 	ambientcolour[0] = sinf(runtime);
 	ambientcolour[1] = cosf(runtime);
 	ambientcolour[2] = 0.8f;
 
+	gamemap.ReSetAmbient();  //Clear last frame's dynamic lights
 
-	gamemap.SetAmbient(ambientcolour);
+	//Tile *ht = gamemap.FindNearest(hover);
+	//if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
 
-	Tile *ht = gamemap.FindNearest(hover);
-	if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
 
+#ifdef debug_lights
 	gamemap.DynamicLight(hover, current_light_colour, current_light_radius);
+#else
+	gamemap.DynamicLight(hover, light_torch, 4);
+#endif
+
+	gamemap.DynamicLight(glm::vec2(player->x, player->y), light_player, 9);
 
 	cull_count = 0;
 
@@ -119,12 +161,20 @@ void App::UpdateWorld()
 		const float left = (l.position.x - l.radius);
 		const float right = (l.position.x + l.radius);
 
-		if ((left > botright.x) or (right < topleft.x)) { cull_count++; continue;}
+		if ((left > botright.x) or (right < topleft.x))
+		{
+			cull_count++;
+			continue;
+		}
 
 		const float top = (l.position.y - l.radius);
 		const float bot = (l.position.y + l.radius);
 
-		if ((top > botright.y) or (bot < topleft.y)) { cull_count++; continue;}
+		if ((top > botright.y) or (bot < topleft.y))
+		{
+			cull_count++;
+			continue;
+		}
 
 		gamemap.DynamicLight(l.position, l.colour, l.radius);
 	}
@@ -132,11 +182,76 @@ void App::UpdateWorld()
 	gamemap.Update();
 }
 
-
-
-void App::AddDlight(glm::vec2 pos)
+void App::UpdatePlayer(float dt)
 {
-	DLight d{pos, current_light_colour, current_light_radius};
+	float dx = 0.0f;
+	float dy = 0.0f;
+
+	if (moving_left) dx -= 1.0f;
+	if (moving_right) dx += 1.0f;
+	if (moving_up) dy -= 1.0f;
+	if (moving_down) dy += 1.0f;
+
+	if (dx or dy) PlayerMove(dx, dy, dt);
+}
+
+//#include <gtc/quaternion.hpp>
+//#include <gtx/quaternion.hpp>
+//#include <gtx/euler_angles.hpp>
+
+void App::PlayerMove(float dx, float dy, float dt)
+{
+	float runmod = moving_running ? 3.0f : 1.0f;
+	float dist = (runmod * player_move_speed) * dt;
+
+	player->x += dx * dist;
+	player->y += dy * dist;
+
+
+	float a1 = player->rot;
+
+	float a2;
+	if (dx>0)
+	{
+		a2 = 90;
+		if (dy != 0) a2 += 45*dy;
+	}
+	else if (dx < 0)
+	{
+		a2 = 270;
+		if (dy != 0) a2 -= 45*dy;
+	}
+	else if (dy > 0) a2 = 180;
+	else a2 = 0;
+
+
+	glm::vec2 up(0.0f, -1.0f);
+	glm::vec2 dir(dx, dy);
+
+
+//	LOGf("angle is %.2f", a2);
+
+
+	float a = (a1*9 + a2) / 10.0f;
+
+
+//	glm::quat q1(glm::yawPitchRoll(a1, 0.0f, 0.0f));
+//
+//	glm::quat q2(glm::yawPitchRoll(a2, 0.0f, 0.0f));
+//
+//	glm::quat q3 = glm::mix(q1, q2, 0.1f);
+
+	//a = glm::roll(q3);
+
+	player->rot = a;
+
+
+	player->SetModelMatrix();
+}
+
+void App::AddDlight(glm::vec2 pos, glm::vec3 color, float radius)
+{
+	DLight d {pos, color, radius};
 	dlights.push_back(d);
 }
 
@@ -150,8 +265,7 @@ void App::ChangeLight(int inc)
 void App::RenderWorld()
 {
 
-	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
-
+	gamemap.Draw(cam, mapcam, topleft.x - 2, botright.x + 2, topleft.y - 2, botright.y + 2);
 
 }
 
@@ -167,14 +281,12 @@ void App::Render()
 	//prog.SetCamera(ortho, m);
 	//prog.Draw(prim);
 
-
 	RenderWorld();
 
 	for (Entity *e : entities)
 	{
-		e->Draw(ortho, mapcam);
+		e->Draw(cam, mapcam);
 	}
-
 
 	RenderGUI();
 
@@ -182,55 +294,25 @@ void App::Render()
 
 void App::RenderGUI()
 {
-	//	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
-	//	font.Draw(ortho, 300, 40, 16, "the quick brown fox jumps over the lazy dog,");
-	//	font.Draw(ortho, 300, 60, 10, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
-	//	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
 
+	font.Draw(ortho, APP_WIDTH / 2 - 100, 25, 30, "(Evolution)");
 
-		font.Draw(ortho, APP_WIDTH / 2 - 100, 25, 30, "(Evolution)");
+	//render the bottom panel to make text easier to read
+	prog.SetCamera(ortho, {});
+	prog.Draw(prim);
 
-		//render the bottom panel to make text easier to read
-		prog.SetCamera(ortho, {});
-		prog.Draw(prim);
+	std::stringstream cursorpos;
+	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
+	cursorpos << "(" << hover.x << "," << hover.y << ")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count
+				<< " offscreen lights)";
 
-		std::stringstream cursorpos;
-		cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
-		cursorpos << "("<<hover.x<<","<<hover.y<<")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count <<" offscreen lights)";
+	font.Draw(ortho, 10, APP_HEIGHT - 12, 12, "This is some status line text.  42  " + cursorpos.str());
 
-		font.Draw(ortho, 10, APP_HEIGHT - 12 , 12, "This is some status line text.  42  "+cursorpos.str());
+	std::stringstream status_light;
+	status_light << "(Current light Colour) " << CurrentLightName << ", Radius " << current_light_radius;
 
-		std::stringstream status_light;
-		status_light << "(Current light Colour) " << CurrentLightName  <<  "Current radius " << current_light_radius;
+	font.Draw(ortho, 10, APP_HEIGHT - 42, 12, status_light.str());
 
-		font.Draw(ortho, 10, APP_HEIGHT - 42 , 12, status_light.str());
-
-
-	//	char ch = '0';
-	//	for (int y = 10;  ch <= '9'; y+= 30, ch++)
-	//	{
-	//		font.Draw(ortho, 20, y, 30, std::string(6, ch));
-	//	}
-
-	//	ch = 'r';
-	//	for (int y = -9;  y < 9 and ch <= 'z'; y++, ch++)
-	//	{
-	//		font.Draw(ortho, -9, y, 1, std::string(6, ch));
-	//	}
-
-	//	//debugging hover
-	//	glm::mat4 hovercam = glm::translate(mapcam, glm::vec3(hover, 0.0f));
-	//	prog.SetCamera(ortho, hovercam);
-	//	prog.Draw(prim);
-
-}
-
-void App::PlayerMove(float dx, float dy)
-{
-	player->x += dx;
-	player->y += dy;
-
-	player->SetModelMatrix();
 }
 
 void App::OnMouseDown(int x, int y, int button)
@@ -241,9 +323,13 @@ void App::OnMouseDown(int x, int y, int button)
 	}
 	if (button == 1)
 	{
+#ifdef debug_lights
 		mouse_dragging_lights = true;
+		AddDlight(hover, current_light_colour, current_light_radius);
+#else
+		AddDlight(hover, light_torch, 4);
+#endif
 
-		AddDlight(hover);
 	}
 }
 
@@ -269,7 +355,7 @@ void App::OnMouseMotion(int x, int y, int dx, int dy)
 
 	if (mouse_dragging_lights)
 	{
-		AddDlight(hover);
+		AddDlight(hover, current_light_colour, current_light_radius);
 	}
 
 }
@@ -278,7 +364,7 @@ void App::OnMouseWheel(int dx, int dy)
 {
 	//LOGf("Mouse wheel dx %d  dy %d", dx, dy);
 	float zoomdelta = dy / -40.0f;
-	zoom += zoomdelta;
+	target_zoom += zoomdelta;
 }
 
 void App::OnKeyDown(SDL_Keysym key)
@@ -290,32 +376,35 @@ void App::OnKeyDown(SDL_Keysym key)
 
 	if (key.sym == SDLK_KP_PLUS) ChangeLight(+1);
 	if (key.sym == SDLK_KP_MINUS) ChangeLight(-1);
-	if (key.sym == SDLK_MINUS and current_light_radius > 0 ) current_light_radius-= 1.0f;
+	if (key.sym == SDLK_MINUS and current_light_radius > 0) current_light_radius -= 1.0f;
 	if (key.sym == SDLK_EQUALS) current_light_radius += 1.0f;
 
+	if (key.sym == SDLK_LEFT or key.sym == SDLK_a) moving_left = true;
+	if (key.sym == SDLK_RIGHT or key.sym == SDLK_d) moving_right = true;
+	if (key.sym == SDLK_UP or key.sym == SDLK_w) moving_up = true;
+	if (key.sym == SDLK_DOWN or key.sym == SDLK_s) moving_down = true;
 
-	float dx = 0.0;
-	float dy = 0.0;
+	if (key.sym == SDLK_LSHIFT or key.sym == SDLK_RSHIFT) moving_running = true;
 
-	if (key.sym == SDLK_LEFT or key.sym == SDLK_a) dx -= 1.0f;
-	if (key.sym == SDLK_RIGHT or key.sym == SDLK_d) dx += 1.0f;
-	if (key.sym == SDLK_UP or key.sym == SDLK_w) dy -= 1.0f;
-	if (key.sym == SDLK_DOWN or key.sym == SDLK_s) dy += 1.0f;
-
-	if (dx or dy) { PlayerMove(dx, dy); }
 }
 
 void App::OnKeyUp(SDL_Keysym key)
 {
+	if (key.sym == SDLK_LEFT or key.sym == SDLK_a) moving_left = false;
+	if (key.sym == SDLK_RIGHT or key.sym == SDLK_d) moving_right = false;
+	if (key.sym == SDLK_UP or key.sym == SDLK_w) moving_up = false;
+	if (key.sym == SDLK_DOWN or key.sym == SDLK_s) moving_down = false;
 
-
+	if (key.sym == SDLK_LSHIFT or key.sym == SDLK_RSHIFT) moving_running = false;
 }
 
 glm::vec2 App::ScreenToWorld(int x, int y)
 {
 	//must convert to xyzw vector first.. argh
-	glm::vec4 tmp(float(x), float(y), 0.0, 1.0);
+	glm::vec4 tmp(float(x) - (APP_WIDTH/2.0f), float(y) - (APP_HEIGHT/2.0f), 0.0f, 1.0f);
+
 	tmp = tmp * invmapcam;
+
 
 	return glm::vec2(tmp);
 }
@@ -323,7 +412,7 @@ glm::vec2 App::ScreenToWorld(int x, int y)
 void App::SetHover(int x, int y)
 {
 
-	hover = ScreenToWorld(x,y);
+	hover = ScreenToWorld(x, y);
 
 	//LOGf("Hovering at world coords %.2f x %.2f", hover.x, hover.y);
 }

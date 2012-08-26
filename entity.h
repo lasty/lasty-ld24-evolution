@@ -65,9 +65,13 @@ public:
 	Player();
 	virtual ~Player();
 	float t;
-	void Update(float dt) { t += dt; rot += 50 * dt;
-	zoom = sinf(t) + 1.0f;
-	SetModelMatrix(); }
+	void Update(float dt)
+	{
+		//t += dt;
+		//rot += 50 * dt;
+		//zoom = sinf(t) + 2.0f;
+	//SetModelMatrix();
+	}
 
 	void Draw(const glm::mat4 &proj, const glm::mat4 &view);
 };

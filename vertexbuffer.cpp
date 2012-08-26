@@ -11,7 +11,7 @@
 
 #include "opengl.h"
 
-VertexBuffer::VertexBuffer()
+VertexBuffer::VertexBuffer(GLenum buffer_hint) : buffer_hint(buffer_hint)
 {
 	Generate();
 }
@@ -48,7 +48,7 @@ void VertexBuffer::Use() const
 void VertexBuffer::Update()
 {
 	Use();
-	glBufferData(GL_ARRAY_BUFFER, stride * size(), data(), GL_STATIC_DRAW);
+	glBufferData(GL_ARRAY_BUFFER, stride * size(), data(), buffer_hint);
 	GLERR();
 }
 

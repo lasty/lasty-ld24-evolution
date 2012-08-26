@@ -48,6 +48,7 @@ public:
 
 	void SetDynamic(const glm::vec3 &col);
 	void SetAmbient(const glm::vec3 &col);
+	void ReSetAmbient();
 
 	void Update();
 	void UpdateColour(const glm::vec3 &col);
@@ -80,7 +81,7 @@ public:
 	void Draw(const glm::mat4 &camera, const glm::mat4 &mv);
 	void Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x2, int y1, int y2);
 
-	void SetAmbient(glm::vec3 col);
+	void ReSetAmbient();  //Call this to reset to static background before applying dynamic lights
 	void Update();
 
 	Tile * FindNearest(const glm::vec2 &cursor);  //find nearest tile from world coordinates cursor

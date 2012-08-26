@@ -26,8 +26,9 @@ class VertexBuffer : public std::vector<Vertex>
 {
 public:
 	GLuint vbuf_id = 0;
+	GLenum buffer_hint = GL_STATIC_DRAW;
 
-	VertexBuffer();
+	VertexBuffer(GLenum buffer_hint = GL_STATIC_DRAW);
 	virtual ~VertexBuffer();
 
 	void Generate();

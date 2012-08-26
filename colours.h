@@ -26,6 +26,12 @@ static glm::vec3 light_white(5.0f, 5.0f, 5.0f);
 static glm::vec3 light_offwhite(4.9f, 4.8f, 5.0f);
 static glm::vec3 light_yellow(5.0f, 4.0f, 0.5f);
 static glm::vec3 light_red(4.9f, 0.5f, 0.5f);
+static glm::vec3 light_blue(1.9f, 1.5f, 4.9f);
+static glm::vec3 light_cyan(1.5f, 4.9f, 4.9f);
+
+static glm::vec3 light_torch(2.0f, 2.0f, 1.5f);
+
+static glm::vec3 light_player(2.0f, 2.0f, 2.0f);
 
 
 static std::vector<std::pair<std::string, glm::vec3>>
@@ -33,7 +39,13 @@ lights_array{
 	{ "White", light_white },
 	{ "OffWhite", light_offwhite},
 	{ "Yellow", light_yellow},
-	{ "Red", light_red}
+	{ "Red", light_red},
+
+	{ "Blue", light_blue},
+	{ "Cyan", light_cyan},
+
+	{ "Torchlight", light_torch },
+	{ "PlayerLight", light_player }
 };
 
 

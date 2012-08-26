@@ -14,17 +14,23 @@
 Tile::Tile(VertexBuffer* vb, int x, int y)
 : Primitive(vb)
 {
-	const float size = 1.0f;
-	const float half = size / 2.0f;
+	const float size = 1.0;
+	const float half = (size / 2.0) + 0.01;
 	const float xoff = x * size;
 	const float yoff = y * size;
 
-	Begin(GL_QUADS);
+	Begin(GL_TRIANGLE_FAN);
 	Add( {xoff - half, yoff - half, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0});  //topleft
 	Add( {xoff + half, yoff - half, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0});  //topright
 	Add( {xoff + half, yoff + half, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0});  //botright
 	Add( {xoff - half, yoff + half, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0});  //botleft
 	//End();
+}
+
+void Tile::ReSetAmbient()
+{
+	colour = ambient_colour;
+	dirty = true;
 }
 
 void Tile::SetAmbient(const glm::vec3 &col)
@@ -72,6 +78,7 @@ void Tile::SetUV(const TileDef &t)
 //////////////////////////////////////////////////////////////////////////////
 
 TileBoard::TileBoard()
+: vb(GL_DYNAMIC_DRAW)
 {
 	program.LoadSource("basic.shader");
 	//tiletexture.LoadFile("tex1.png");
@@ -145,13 +152,13 @@ void TileBoard::Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x
 	}
 }
 
-void TileBoard::SetAmbient(glm::vec3 col)
+void TileBoard::ReSetAmbient()
 {
 	for (auto row : map)
 	{
 		for (auto cell : row)
 		{
-			cell->SetAmbient(col);
+			cell->ReSetAmbient();
 		}
 	}
 }
@@ -241,6 +248,15 @@ int RandInt(int start, int end)
 	return r + start;
 }
 
+int RandFloat(float start, float end)
+{
+	const float range = end - start;
+
+	int r = (rand() / float(RAND_MAX) ) * range;
+
+	return r + start;
+}
+
 void TileBoard::GenerateTerrain()
 {
 	for (auto y : map)
@@ -263,6 +279,10 @@ void TileBoard::GenerateTerrain()
 				break;
 
 			}
+
+
+			float c = RandFloat(0.05, 0.3);
+			i->SetAmbient(glm::vec3{c});
 		}
 	}
 }

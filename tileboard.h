@@ -17,9 +17,13 @@
 
 class Tile : public Primitive
 {
+protected:
+	friend class TileBoard;
+
 	glm::vec3 colour;
 	glm::vec3 ambient_colour;
 
+	bool dirty = true;
 public:
 
 	Tile(VertexBuffer* vb, int x, int y);
@@ -53,6 +57,7 @@ public:
 	void Destroy();
 
 	void Draw(const glm::mat4 &camera, const glm::mat4 &mv);
+	void Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x2, int y1, int y2);
 
 	void SetAmbient(glm::vec3 col);
 	void Update();

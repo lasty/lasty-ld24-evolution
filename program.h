@@ -100,7 +100,7 @@ public:
 	void DiscoverUniforms();
 	void DiscoverAttributes();
 
-	void SetAttributes(Primitive &p);
+	void SetAttributes(const Primitive &p);
 
 	void SetCamera(const glm::mat4 &projection_matrix, const glm::mat4 &modelview_matrix);
 	void SetProjectionMatrix(const glm::mat4 &projection_matrix);
@@ -111,7 +111,9 @@ public:
 	void UseTexture(Image *img);
 
 
-	void Draw(Primitive &p);
+	void WarmUp(const Primitive &p);  //Set up arrays/buffers/textures but do not draw
+
+	void Draw(const Primitive &p);
 
 
 };

@@ -281,7 +281,7 @@ void Program::UseTexture(Image *img)
 	GLERR();
 }
 
-void Program::SetAttributes(Primitive &p)
+void Program::SetAttributes(const Primitive &p)
 {
 	p.Use();  //select in the buffer
 
@@ -296,11 +296,17 @@ void Program::SetAttributes(Primitive &p)
 	glEnableVertexAttribArray(vertex_texcoords);
 }
 
-void Program::Draw(Primitive &p)
+void Program::WarmUp(const Primitive &p)
 {
 	Use();
 	if (imgref) UseTexture(imgref);
 
 	SetAttributes(p);
+}
+
+void Program::Draw(const Primitive &p)
+{
+	WarmUp(p);
+
 	p.Draw();
 }

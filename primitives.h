@@ -34,8 +34,8 @@ public:
 	void Add(const Vertex &v);
 	void End();
 
-	void Use();
-	void Draw();
+	void Use() const;
+	void Draw() const;
 };
 
 #endif /* _LASTY_LD24_PRIMITIVES_H_ */

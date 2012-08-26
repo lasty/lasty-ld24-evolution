@@ -40,7 +40,7 @@ void VertexBuffer::Destroy()
 	}
 }
 
-void VertexBuffer::Use()
+void VertexBuffer::Use() const
 {
 	glBindBuffer(GL_ARRAY_BUFFER, vbuf_id);
 }

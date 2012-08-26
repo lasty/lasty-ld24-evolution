@@ -66,6 +66,8 @@ public:
 
 	glm::vec2 hover;  //mouse position in world coords
 	void SetHover(int x, int y);
+	glm::vec2 ScreenToWorld(int x, int y);
+
 };
 
 #endif /* _LASTY_LD24_APP_H_ */

@@ -40,13 +40,15 @@ App::App()
 
 	prog.SetTexture(i);
 
-	gamemap.Create(10, 10);
+	gamemap.Create(100, 100);
 }
 
 App::~App()
 {
 
 }
+
+
 
 void App::Update(float dt)
 {
@@ -60,8 +62,8 @@ void App::Update(float dt)
 
 	gamemap.SetAmbient(ambientcolour);
 
-	//Tile *ht = gamemap.FindNearest(hover);
-	//if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
+	Tile *ht = gamemap.FindNearest(hover);
+	if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
 
 	gamemap.DynamicLight(hover, glm::vec3(5.0f, 5.0f, 4.5f), 5.0f);
 
@@ -89,12 +91,18 @@ void App::Render()
 	invmapcam = mapcam._inverse();  //can't seem to find the proper access/function for this
 
 
-	gamemap.Draw(ortho, mapcam);
+	//Doing some rudimentary bounds checking in the case of huge maps
+	glm::vec2 topleft = ScreenToWorld(0,0);
+	glm::vec2 botright = ScreenToWorld(640, 480);
+
+	gamemap.Draw(ortho, mapcam, topleft.x-2, botright.x+2, topleft.y-2, botright.y+2);
+
 
 //	font.Draw(ortho, 300, 20, 24, "SOMETHING Something Something Complete");
 //	font.Draw(ortho, 300, 40, 16, "the quick brown fox jumps over the lazy dog,");
 //	font.Draw(ortho, 300, 60, 10, "THE QUICK BROWN FOX JUMPS OVER THE LAZY DOG.");
 //	font.Draw(ortho, 50, 100, 30, "12345679810, 11, 12");
+
 
 	font.Draw(ortho, 220, 25, 30, "(Evolution)");
 
@@ -172,15 +180,19 @@ void App::OnKeyUp(SDL_Keysym key)
 
 }
 
+glm::vec2 App::ScreenToWorld(int x, int y)
+{
+	//must convert to xyzw vector first.. argh
+	glm::vec4 tmp(float(x), float(y), 0.0, 1.0);
+	tmp = tmp * invmapcam;
+
+	return glm::vec2(tmp);
+}
 
 void App::SetHover(int x, int y)
 {
-	//must convert to xyzw vector first.. argh
-	glm::vec4 tmp(x, y, 0.0, 1.0);
-	tmp = tmp * invmapcam;
 
-	hover.x = tmp.x;
-	hover.y = tmp.y;
+	hover = ScreenToWorld(x,y);
 
 	//LOGf("Hovering at world coords %.2f x %.2f", hover.x, hover.y);
 }

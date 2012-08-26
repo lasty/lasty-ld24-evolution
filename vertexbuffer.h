@@ -33,7 +33,7 @@ public:
 	void Generate();
 	void Destroy();
 
-	void Use();
+	void Use() const;
 	void Update();
 
 	constexpr static size_t stride = sizeof(Vertex);

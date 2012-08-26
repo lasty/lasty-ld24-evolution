@@ -44,15 +44,13 @@ void Primitive::End()
 	vbuff->Update();  //Copy vertex buffer to graphics memory
 }
 
-void Primitive::Use()
+void Primitive::Use() const
 {
 	vbuff->Use();
 }
 
-void Primitive::Draw()
+void Primitive::Draw() const
 {
-	Use();
-
 	glDrawArrays(prim_type, begin, count);
 }
 

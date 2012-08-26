@@ -22,22 +22,25 @@ Tile::Tile(VertexBuffer* vb, int x, int y)
 	Add( {xoff + half, yoff - half, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0});  //topright
 	Add( {xoff + half, yoff + half, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0});  //botright
 	Add( {xoff - half, yoff + half, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0});  //botleft
-	End();
+	//End();
 }
 
 void Tile::SetAmbient(const glm::vec3 &col)
 {
 	ambient_colour = colour = col;
+	dirty = true;
 }
 
 void Tile::SetDynamic(const glm::vec3 &col)
 {
 	colour += col;
+	dirty = true;
 }
 
 void Tile::Update()
 {
 	UpdateColour(colour);
+	dirty = false;
 }
 
 void Tile::UpdateColour(const glm::vec3 &col)
@@ -53,7 +56,6 @@ void Tile::UpdateColour(const glm::vec3 &col)
 
 //////////////////////////////////////////////////////////////////////////////
 
-
 TileBoard::TileBoard()
 {
 	program.LoadSource("basic.shader");
@@ -62,12 +64,10 @@ TileBoard::TileBoard()
 
 }
 
-
 TileBoard::~TileBoard()
 {
 	Destroy();
 }
-
 
 void TileBoard::Create(int width, int height)
 {
@@ -92,28 +92,40 @@ void TileBoard::Destroy()
 	{
 		for (auto col : row)
 		{
-			delete(col);
+			delete (col);
 		}
 	}
 	map.clear();
 }
 
-
 void TileBoard::Draw(const glm::mat4 &camera, const glm::mat4 &mv)
 {
-	program.SetCamera(camera, mv);
+	Draw(camera, mv, 0, mapsizex-1, 0, mapsizey-1);
+}
 
-	int count = 0;
-	for (auto row: map)
+void TileBoard::Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x2, int y1, int y2)
+{
+	x1 = glm::max(0, x1);
+	x2 = glm::min(mapsizex-1, x2);
+	y1 = glm::max(0, y1);
+	y2 = glm::min(mapsizey-1, y2);
+
+	program.SetCamera(camera, mv);
+	Tile * t = map[0][0];
+
+	program.WarmUp(*t);
+
+	for (int y = y1; y <= y2; ++y)
 	{
-		for (auto cell: row)
+		auto const &row = map[y];
+
+		for (int x = x1; x <= x2; ++x)
 		{
-			count++;
-			program.Draw(*cell);
+			auto const &cell = row[x];
+			cell->Draw();
 		}
 	}
 }
-
 
 void TileBoard::SetAmbient(glm::vec3 col)
 {
@@ -126,20 +138,21 @@ void TileBoard::SetAmbient(glm::vec3 col)
 	}
 }
 
-
 void TileBoard::Update()
 {
 	for (auto row : map)
 	{
 		for (auto cell : row)
 		{
-			cell->Update();
+			if (cell->dirty)
+			{
+				cell->Update();
+			}
 		}
 	}
 
 	vb.Update();
 }
-
 
 Tile * TileBoard::FindNearest(const glm::vec2 &cursor)
 {
@@ -158,20 +171,26 @@ Tile * TileBoard::FindNearest(const glm::vec2 &cursor)
 
 void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius)
 {
-	float maxb = 0.0f, minb = 1.0f;
+	int irad = roundf(radius + 1);
 
-	for (int ix = 0;  ix < mapsizex;  ++ix)
+	int xrange1 = glm::max(0, int(position.x - irad));
+	int xrange2 = glm::min(mapsizex, int(position.x + irad));
+
+	int yrange1 = glm::max(0, int(position.y - irad));
+	int yrange2 = glm::min(mapsizey, int(position.y + irad));
+
+	for (int ix = xrange1; ix < xrange2; ++ix)
 	{
 		float x = ix;
 
-		for (int iy = 0; iy < mapsizey; ++iy)
+		for (int iy = yrange1; iy < yrange2; ++iy)
 		{
 			float y = iy;
-			glm::vec2 current(x,y);
+			glm::vec2 current(x, y);
 
 			Tile *t = map[y][x];
 
-			float distance = glm::distance(position, glm::vec2(x,y));
+			float distance = glm::distance(position, glm::vec2(x, y));
 
 			if (distance > radius) continue;
 
@@ -180,14 +199,8 @@ void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, 
 			glm::vec3 falloffcol = colour * brightness;
 
 			t->SetDynamic(falloffcol);
-			t->Update();
-
-			maxb = glm::max(maxb, brightness);
-			minb = glm::min(minb, brightness);
-
 		}
 	}
 
-	LOGf("min brigtness %.2f   max brightness %.2f", minb, maxb);
 }
 

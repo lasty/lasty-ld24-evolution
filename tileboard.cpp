@@ -11,6 +11,8 @@
 
 #include "math.h"
 
+#include "globals.h"
+
 Tile::Tile(VertexBuffer* vb, int x, int y)
 : Primitive(vb)
 {
@@ -72,6 +74,7 @@ void Tile::SetUV(const TileDef &t)
 	}
 
 	block_light = t.blocks_light;
+	block_movement = t.block_movement;
 	dirty = true;
 }
 
@@ -108,7 +111,7 @@ void TileBoard::Create(int width, int height)
 		map.push_back(row);
 	}
 
-	GenerateTerrain();
+	//GenerateTerrain(); Called from within app now
 }
 
 void TileBoard::Destroy()
@@ -239,23 +242,6 @@ void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, 
 
 }
 
-int RandInt(int start, int end)
-{
-	const int range = end - start;
-
-	int r = rand() % range;
-
-	return r + start;
-}
-
-int RandFloat(float start, float end)
-{
-	const float range = end - start;
-
-	int r = (rand() / float(RAND_MAX) ) * range;
-
-	return r + start;
-}
 
 void TileBoard::GenerateTerrain()
 {
@@ -263,7 +249,48 @@ void TileBoard::GenerateTerrain()
 	{
 		for (auto i : y)
 		{
-			int r = RandInt(0, 3);
+			int r = RandInt(0, 6);
+			switch (r)
+			{
+				case 0:
+				case 1:
+				case 2:
+					i->SetUV(tile_floor1);
+				break;
+
+				case 3:
+				case 4:
+					i->SetUV(tile_floor2);
+				break;
+
+				case 5:
+					i->SetUV(tile_wall1);
+				break;
+
+			}
+
+
+			float c = RandFloat(0.05f, 0.2f);
+			i->SetAmbient(glm::vec3{c});
+		}
+	}
+}
+
+void TileBoard::ClearArea(float px, float py, int radius)
+{
+	int x = roundf(px);
+	int y = roundf(py);
+
+	for(int ix = x - radius; ix < x+radius; ++ix)
+	{
+		for (int iy = y-radius; iy < y+radius; ++iy)
+		{
+			if (ix < 0 or ix >= mapsizex) continue;
+			if (iy < 0 or iy >= mapsizey) continue;
+
+			auto i = map[iy][ix];
+
+			int r = RandInt(0, 2);
 			switch (r)
 			{
 				case 0:
@@ -273,19 +300,12 @@ void TileBoard::GenerateTerrain()
 				case 1:
 					i->SetUV(tile_floor2);
 				break;
-
-				case 2:
-					i->SetUV(tile_wall1);
-				break;
-
 			}
-
-
-			float c = RandFloat(0.05, 0.3);
-			i->SetAmbient(glm::vec3{c});
 		}
 	}
+
 }
+
 
 int TileBoard::CheckBlockPath(int x1, int y1, int x2, int y2)
 {

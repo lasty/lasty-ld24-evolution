@@ -20,9 +20,10 @@ struct TileDef
 {
 	glm::mat4x2 uv;
 	bool blocks_light;
+	bool block_movement;
 
 	TileDef(int x, int y, int xtiles, int ytiles, bool blockslight)
-	:uv(Image::GetGridUV(x,y,xtiles,ytiles, 512)), blocks_light(blockslight)
+	:uv(Image::GetGridUV(x,y,xtiles,ytiles, 512)), blocks_light(blockslight), block_movement(blockslight)
 	{}
 };
 
@@ -40,9 +41,10 @@ protected:
 
 	bool dirty = true;
 
-	bool block_light = false;
 
 public:
+	bool block_light = false;
+	bool block_movement = false;
 
 	Tile(VertexBuffer* vb, int x, int y);
 
@@ -92,6 +94,8 @@ public:
 	void DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius);
 
 	void GenerateTerrain();
+
+	void ClearArea(float x, float y, int radius = 3);
 };
 
 bool TileBoard::IsBlocking(int px, int py)

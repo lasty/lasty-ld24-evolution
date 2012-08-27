@@ -22,13 +22,16 @@ class Factory
 {
 public:
 	Program program1;
+	ProgramColour program2;
 
 	VertexBuffer vb1;
 
 	Image image1;
 
 
-	Primitive player_prim1;
+	Primitive prim_player1;
+	Primitive prim_player2;
+	Primitive prim_gem;
 
 	Factory();
 	~Factory();
@@ -48,7 +51,8 @@ public:
 	float x = 0.0f;
 	float y = 0.0f;
 	float rot = 0.0f;  //degrees not radians
-	float zoom = 1.0f;
+	float zoom = 0.5f;
+	float radius = 0.45f;
 
 	virtual void SetModelMatrix();
 
@@ -64,15 +68,18 @@ class Player : public Entity
 public:
 	Player();
 	virtual ~Player();
-	float t;
-	void Update(float dt)
-	{
-		//t += dt;
-		//rot += 50 * dt;
-		//zoom = sinf(t) + 2.0f;
-	//SetModelMatrix();
-	}
+	void Update(float dt);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view);
+};
 
+
+class Gem : public Entity
+{
+public:
+	Gem(float x, float y);
+	virtual ~Gem();
+
+	void Update(float dt);
 	void Draw(const glm::mat4 &proj, const glm::mat4 &view);
 };
 

@@ -18,6 +18,7 @@
 #include <sstream>
 #include <iomanip>
 
+#include <time.h>
 #include <math.h>
 #include <gtc/matrix_transform.hpp>
 
@@ -45,24 +46,59 @@ App::App()
 	//i.LoadFile("font.png");
 	prog.SetTexture(i);
 
-	gamemap.Create(160, 90);
+	player = new Player();
+	player->x = 5.0f;
+	player->y = 5.0f;
+	//player->zoom = 1.0f;
+	player->SetModelMatrix();
+
+	//entities.push_back(player);
+
+	gamemap.Create(MAP_WIDTH, MAP_HEIGHT);
 
 	ChangeLight(0);
 
 	//Factory::GetInstance().program1.SetTexture(&gamemap.tiletexture);
 
-	player = new Player();
+	srand(time(nullptr));
 
-	player->x = 5.0f;
-	player->y = 5.0f;
-	player->zoom = 1.0f;
-	player->SetModelMatrix();
+	GenMap();
+}
 
-	entities.push_back(player);
+
+void App::GenMap()
+{
+	ClearEntities();
+	dlights.clear();
+
+	gamemap.GenerateTerrain();
+
+	//add in some dynamic lights for effect
+	for (int i = 1; i < 100; ++i)
+	{
+		float lx = RandFloat(1.0f, gamemap.mapsizex);
+		float ly = RandFloat(1.0f, gamemap.mapsizex);
+
+		int li = RandInt(0, lights_array.size()-1);
+		int type = RandInt(0, 2);
+
+		float r = RandFloat(2.0f, 10.0f);
+
+		AddDlight(glm::vec2{lx, ly}, lights_array[li].second, r, type);
+	}
+
+
+	gamemap.ClearArea(player->x, player->y);
+
+
+	Gem *g = new Gem(player->x + 5,player->y);
+
+	entities.push_back( g );
+
 
 }
 
-App::~App()
+void App::ClearEntities()
 {
 	for (auto *i : entities)
 	{
@@ -70,17 +106,26 @@ App::~App()
 	}
 }
 
+App::~App()
+{
+	delete player;
+	ClearEntities();  //Clean up vector of pointers
+}
+
 void App::Update(float dt)
 {
 	runtime += dt;
 
-	zoom = (9*zoom + target_zoom) / 10.0f;
+		zoom = (9*zoom + target_zoom) / 10.0f;
 
-	target_camx = player->x;
-	target_camy = player->y;
+		if (not mouse_dragging)
+		{
+		target_camx = player->x;
+		target_camy = player->y;
+		}
 
-	camx = (9*camx + target_camx) / 10.0f;
-	camy = (9*camy + target_camy) / 10.0f;
+		camx = (9*camx + target_camx) / 10.0f;
+		camy = (9*camy + target_camy) / 10.0f;
 
 
 	//Yep Im not sure what I did
@@ -120,6 +165,8 @@ void App::Update(float dt)
 
 	UpdatePlayer(dt);
 
+
+	player->Update(dt);
 	for (Entity *e : entities)
 	{
 		e->Update(dt);
@@ -176,7 +223,22 @@ void App::UpdateWorld()
 			continue;
 		}
 
-		gamemap.DynamicLight(l.position, l.colour, l.radius);
+		switch (l.type)
+		{
+			case 0:  //solid
+			default:
+				gamemap.DynamicLight(l.position, l.colour, l.radius);
+			break;
+
+			case 1:  //flicker
+				float brightflicker = RandFloat(-0.1, 0.1);
+				//float radiusflicker = RandFloat(0.0, 0.2);
+				gamemap.DynamicLight(l.position,
+				                     l.colour+brightflicker,
+				                     l.radius//+radiusflicker
+				                     );
+			break;
+		}
 	}
 
 	gamemap.Update();
@@ -195,21 +257,90 @@ void App::UpdatePlayer(float dt)
 	if (dx or dy) PlayerMove(dx, dy, dt);
 }
 
-//#include <gtc/quaternion.hpp>
-//#include <gtx/quaternion.hpp>
-//#include <gtx/euler_angles.hpp>
+
+//does this point intersect the world?
+bool App::CollidePoint(float x, float y)
+{
+	Tile *t = gamemap.FindNearest(glm::vec2(x, y));
+
+	if (t == nullptr) return true;  //clip on edge of world
+
+	return t->block_movement;
+}
+
+//does this point (with radius) intersect the world?
+bool App::CollidePoint(float x, float y, float radius)
+{
+	bool p;
+	p = CollidePoint(x+(radius * 0.0f), y+(radius * 0.0f));
+	if (p) return true;
+
+	p = CollidePoint(x+(radius * 1.0f), y+(radius * 0.0f));
+	if (p) return true;
+	p = CollidePoint(x+(radius * -1.0f), y+(radius * 0.0f));
+	if (p) return true;
+
+	p = CollidePoint(x+(radius * 0.0f), y+(radius * 1.0f));
+	if (p) return true;
+	p = CollidePoint(x+(radius * 0.0f), y+(radius * -1.0f));
+	if (p) return true;
+
+
+	return false;
+}
+
+//does this line intersect the world?
+bool App::CollidePath(float x1, float y1, float x2, float y2, float radius)
+{
+	//divide the test line into smaller chunks TODO
+
+	bool t1 = CollidePoint(x1, y1, radius);
+	if (t1) return true;
+
+	float xmid = (x1 + x2) / 2.0f;
+	float ymid = (y1 + y2) / 2.0f;
+
+	bool tmid = CollidePoint(xmid, ymid, radius);
+	if (tmid) return true;
+
+	bool t2 = CollidePoint(x2, y2, radius);
+	if (t2) return true;
+
+	//else, free path
+	return false;
+}
+
+//move an entitiy while checking for clipping
+bool App::MoveEntity(Entity *e, float dx, float dy)
+{
+	bool canmove = not CollidePath(e->x, e->y, e->x+dx, e->y+dy, e->radius);
+	if (NoClipping) canmove = true;
+	if (canmove)
+	{
+		e->x = e->x+dx;
+		e->y = e->y+dy;
+
+		e->SetModelMatrix();
+	}
+	return canmove;
+}
 
 void App::PlayerMove(float dx, float dy, float dt)
 {
 	float runmod = moving_running ? 3.0f : 1.0f;
 	float dist = (runmod * player_move_speed) * dt;
 
-	player->x += dx * dist;
-	player->y += dy * dist;
+	if (not MoveEntity(player, dx*dist, dy*dist))
+	{
+		MoveEntity(player, dx*dist, 0.0f);
+		MoveEntity(player, 0.0f, dy*dist);
+	}
 
+	//player->x += dx * dist;
+	//player->y += dy * dist;
 
+	//smooth change the rotation (not perfect, needs wrap around)
 	float a1 = player->rot;
-
 	float a2;
 	if (dx>0)
 	{
@@ -224,24 +355,7 @@ void App::PlayerMove(float dx, float dy, float dt)
 	else if (dy > 0) a2 = 180;
 	else a2 = 0;
 
-
-	glm::vec2 up(0.0f, -1.0f);
-	glm::vec2 dir(dx, dy);
-
-
-//	LOGf("angle is %.2f", a2);
-
-
 	float a = (a1*9 + a2) / 10.0f;
-
-
-//	glm::quat q1(glm::yawPitchRoll(a1, 0.0f, 0.0f));
-//
-//	glm::quat q2(glm::yawPitchRoll(a2, 0.0f, 0.0f));
-//
-//	glm::quat q3 = glm::mix(q1, q2, 0.1f);
-
-	//a = glm::roll(q3);
 
 	player->rot = a;
 
@@ -249,9 +363,9 @@ void App::PlayerMove(float dx, float dy, float dt)
 	player->SetModelMatrix();
 }
 
-void App::AddDlight(glm::vec2 pos, glm::vec3 color, float radius)
+void App::AddDlight(glm::vec2 pos, glm::vec3 color, float radius, int type)
 {
-	DLight d {pos, color, radius};
+	DLight d (pos, color, radius, type);
 	dlights.push_back(d);
 }
 
@@ -288,6 +402,8 @@ void App::Render()
 		e->Draw(cam, mapcam);
 	}
 
+	player->Draw(cam, mapcam);
+
 	RenderGUI();
 
 }
@@ -304,7 +420,7 @@ void App::RenderGUI()
 	std::stringstream cursorpos;
 	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
 	cursorpos << "(" << hover.x << "," << hover.y << ")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count
-				<< " offscreen lights)";
+				<< " offscreen lights)  Entities " << entities.size();
 
 	font.Draw(ortho, 10, APP_HEIGHT - 12, 12, "This is some status line text.  42  " + cursorpos.str());
 
@@ -349,8 +465,10 @@ void App::OnMouseMotion(int x, int y, int dx, int dy)
 
 	if (mouse_dragging)
 	{
-		camx += dx;
-		camy += dy;
+		//glm::vec2 tmp = ScreenToWorld(dy, dx);
+
+		target_camx += dx * 4 / zoom;
+		target_camy += dy * 4/ zoom;
 	}
 
 	if (mouse_dragging_lights)
@@ -385,6 +503,10 @@ void App::OnKeyDown(SDL_Keysym key)
 	if (key.sym == SDLK_DOWN or key.sym == SDLK_s) moving_down = true;
 
 	if (key.sym == SDLK_LSHIFT or key.sym == SDLK_RSHIFT) moving_running = true;
+
+	if (key.sym == SDLK_c) NoClipping = not NoClipping;
+
+	if (key.sym == SDLK_n) GenMap();
 
 }
 

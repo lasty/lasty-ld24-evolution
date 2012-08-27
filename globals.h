@@ -40,7 +40,31 @@
 
 #endif
 
+constexpr int MAP_WIDTH = 160;  //in tiles
+constexpr int MAP_HEIGHT = 90;
+
+
 #include <stdio.h>
+#include <stdlib.h>
+
+
+inline int RandInt(int start, int end)
+{
+	const int range = end - start;
+
+	int r = rand() % range;
+
+	return r + start;
+}
+
+inline float RandFloat(float start, float end)
+{
+	const float range = end - start;
+
+	float r = (float(rand()) / float(RAND_MAX) )* range;
+
+	return r + start;
+}
 
 class Exception
 {

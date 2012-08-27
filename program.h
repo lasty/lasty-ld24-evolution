@@ -65,6 +65,7 @@ public:
 
 class Program
 {
+protected:
 	GLuint program_id;
 	std::string filename = "Unknown";
 
@@ -97,7 +98,7 @@ public:
 	void Validate();
 	std::string GetLog();
 
-	void DiscoverUniforms();
+	virtual void DiscoverUniforms();
 	void DiscoverAttributes();
 
 	void SetAttributes(const Primitive &p);
@@ -114,9 +115,19 @@ public:
 	void WarmUp(const Primitive &p);  //Set up arrays/buffers/textures but do not draw
 
 	void Draw(const Primitive &p);
-
-
 };
 
+
+class ProgramColour : public Program
+{
+protected:
+	GLint tint_colour = -1;
+
+public:
+	void DiscoverUniforms();
+
+	void SetDrawColour(const glm::vec4 &colour);
+
+};
 
 #endif /* _LASTY_LD24_PROGRAM_H_ */

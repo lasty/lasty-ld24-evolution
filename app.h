@@ -22,11 +22,20 @@
  *      Author: Lasty
  */
 
-struct DLight
+class DLight
 {
+public:
 	glm::vec2 position;
 	glm::vec3 colour;
 	float radius;
+
+	bool done = false;
+
+	int type = 0;
+
+	DLight(glm::vec2 position, glm::vec3 colour, float radius, int type = 0)
+	: position(position), colour(colour), radius(radius), done(false), type(type)
+	{ }
 };
 
 class App
@@ -54,17 +63,18 @@ public:
 	Font font;
 
 	TileBoard gamemap;
+	void GenMap();
 
-
+	void ClearEntities();
 	std::vector<Entity*> entities;
-	Player *player;
+	Player *player = nullptr;
 
 
 	float runtime = 0.0f;
 	glm::vec3 ambientcolour;
 
 	std::vector<DLight> dlights;
-	void AddDlight(glm::vec2 pos, glm::vec3 color, float radius);
+	void AddDlight(glm::vec2 pos, glm::vec3 color, float radius, int type=0);
 	void ChangeLight(int inc);
 	glm::vec3 current_light_colour;
 	float current_light_radius = 5.0f;
@@ -94,9 +104,10 @@ public:
 	bool moving_down = false;
 	bool moving_running = false;
 
+	bool NoClipping = false;
 
 	float zoom = 30.0f;
-	float target_zoom = 40.0f;
+	float target_zoom = 70.0f;
 	float camx = 100.0f;
 	float target_camx = 100.0f;
 	float camy = 100.0f;
@@ -112,6 +123,14 @@ public:
 	glm::vec2 hover;  //mouse position in world coords
 	void SetHover(int x, int y);
 	glm::vec2 ScreenToWorld(int x, int y);
+
+
+	bool MoveEntity(Entity *e, float dx, float dy);
+
+	bool CollidePoint(float x, float y);
+	bool CollidePoint(float x, float y, float radius);
+	bool CollidePath(float x1, float y1, float x2, float y2, float radius);
+
 
 };
 

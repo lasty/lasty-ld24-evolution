@@ -310,3 +310,21 @@ void Program::Draw(const Primitive &p)
 
 	p.Draw();
 }
+
+
+void ProgramColour::DiscoverUniforms()
+{
+	Program::DiscoverUniforms();
+
+	tint_colour = glGetUniformLocation(program_id, "tint_colour");
+	ASSERT(tint_colour != -1, "ProgramColour requires uniform 'tint_colour'");
+}
+
+void ProgramColour::SetDrawColour(const glm::vec4 &colour)
+{
+	glUniform4fv(tint_colour, 1, glm::value_ptr(colour));
+
+}
+
+
+

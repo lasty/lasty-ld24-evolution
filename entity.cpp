@@ -10,6 +10,9 @@
 #include "entity.h"
 #include "colours.h"
 
+//for DLight
+#include "app.h"
+
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 
@@ -28,10 +31,7 @@ inline void TileQuad(Primitive &prim, float zoom, int x, int y, int gridx, int g
 }
 
 Factory::Factory()
-: program1(), vb1()
-, prim_player1(vb1)
-, prim_player2(vb1)
-, prim_gem(vb1)
+: program1(), vb1(), prim_player1(vb1), prim_player2(vb1), prim_gem(vb1)
 {
 	LOG("Factory()");
 
@@ -42,6 +42,7 @@ Factory::Factory()
 	image1.SetBlend(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
 	program1.SetTexture(image1);
+	program2.SetTexture(image1);
 
 	TileQuad(prim_player1, 1.0, 0, 2, 4, 4, 512);
 	TileQuad(prim_player2, 1.0, 1, 2, 4, 4, 512);
@@ -88,20 +89,36 @@ void Entity::Update(float dt)
 Player::Player()
 {
 	zoom = 0.5f;
+	skin = RandInt(0, 2);
 }
 
 Player::~Player()
 {
 
 }
+
 void Player::Update(float dt)
 {
 }
 
-void Player::Draw(const glm::mat4 &proj, const glm::mat4 &view)
+void Player::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
 {
-	Factory::GetInstance().program1.SetCamera(proj, view * model_matrix);
-	Factory::GetInstance().program1.Draw(Factory::GetInstance().prim_player1);
+	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
+	Factory::GetInstance().program2.SetDrawColour(glm::vec4(backgroundcol, 1.0f));
+
+	if (skin == 0)
+	{
+		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player1);
+	}
+	else
+	{
+		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player2);
+	}
+}
+
+DLight* Player::GetLight()
+{
+	return nullptr;
 }
 
 Gem::Gem(float x, float y)
@@ -119,12 +136,17 @@ void Gem::Update(float dt)
 
 }
 
-void Gem::Draw(const glm::mat4 &proj, const glm::mat4 &view)
+void Gem::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
 {
-	glm::vec4 col{0.4f, 0.9f, 0.5f, 0.8f};
+	glm::vec4 col {0.4f, 0.9f, 0.5f, 1.0f};
 
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
-	Factory::GetInstance().program2.SetDrawColour(col);
+	Factory::GetInstance().program2.SetDrawColour(col * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_gem);
 }
 
+DLight * Gem::GetLight()
+{
+	static DLight gemlight (glm::vec2(0,0), glm::vec3 (0.7, 1.0, 0.7), 5, 1);
+	return &gemlight;
+}

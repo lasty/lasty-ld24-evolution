@@ -18,7 +18,6 @@
 #include <sstream>
 #include <iomanip>
 
-#include <time.h>
 #include <math.h>
 #include <gtc/matrix_transform.hpp>
 
@@ -46,13 +45,7 @@ App::App()
 	//i.LoadFile("font.png");
 	prog.SetTexture(i);
 
-	player = new Player();
-	player->x = 5.0f;
-	player->y = 5.0f;
-	//player->zoom = 1.0f;
-	player->SetModelMatrix();
 
-	//entities.push_back(player);
 
 	gamemap.Create(MAP_WIDTH, MAP_HEIGHT);
 
@@ -60,7 +53,6 @@ App::App()
 
 	//Factory::GetInstance().program1.SetTexture(&gamemap.tiletexture);
 
-	srand(time(nullptr));
 
 	GenMap();
 }
@@ -77,7 +69,7 @@ void App::GenMap()
 	for (int i = 1; i < 100; ++i)
 	{
 		float lx = RandFloat(1.0f, gamemap.mapsizex);
-		float ly = RandFloat(1.0f, gamemap.mapsizex);
+		float ly = RandFloat(1.0f, gamemap.mapsizey);
 
 		int li = RandInt(0, lights_array.size()-1);
 		int type = RandInt(0, 2);
@@ -87,7 +79,37 @@ void App::GenMap()
 		AddDlight(glm::vec2{lx, ly}, lights_array[li].second, r, type);
 	}
 
+	//add in some gems
+	for (int i = 1; i < 100; ++i)
+	{
+		int gx = RandInt(0, gamemap.mapsizex);
+		int gy = RandInt(0, gamemap.mapsizey);
 
+		entities.push_back(new Gem(gx, gy));
+	}
+
+
+	if (player == nullptr)
+	{
+		player = new Player();
+		player->x = 5.0f;
+		player->y = 5.0f;
+		//player->zoom = 1.0f;
+		player->SetModelMatrix();
+	}
+	else
+	{
+		Player *p2 = new Player();
+		p2->x = player->x;
+		p2->y = player->y;
+		p2->rot = player->rot;
+		p2->SetModelMatrix();
+
+		delete player;
+		player = p2;
+	}
+
+	//entities.push_back(player);
 	gamemap.ClearArea(player->x, player->y);
 
 
@@ -100,10 +122,11 @@ void App::GenMap()
 
 void App::ClearEntities()
 {
-	for (auto *i : entities)
+	for (Entity *i : entities)
 	{
 		delete i;
 	}
+	entities.clear();
 }
 
 App::~App()
@@ -166,11 +189,33 @@ void App::Update(float dt)
 	UpdatePlayer(dt);
 
 
+	gamemap.ReSetAmbient();  //Clear last frame's dynamic lights
+
+
 	player->Update(dt);
 	for (Entity *e : entities)
 	{
 		e->Update(dt);
+
+		DLight *l = e->GetLight();
+		if (l){
+			gamemap.DynamicLight(glm::vec2(e->x, e->y), l->colour, l->radius);
+		}
 	}
+
+	//Delete finished entities (probably a better way to do this)
+	for (auto i = entities.begin();  i != entities.end(); )
+	{
+		if ((*i)->done)
+		{
+			delete (*i);
+			entities.erase(i);
+			i = entities.begin();
+			continue;
+		}
+		i++;
+	}
+
 
 	UpdateWorld();
 
@@ -185,8 +230,6 @@ void App::UpdateWorld()
 	ambientcolour[0] = sinf(runtime);
 	ambientcolour[1] = cosf(runtime);
 	ambientcolour[2] = 0.8f;
-
-	gamemap.ReSetAmbient();  //Clear last frame's dynamic lights
 
 	//Tile *ht = gamemap.FindNearest(hover);
 	//if (ht) { ht->SetAmbient(ambientcolour * 2.0f); }
@@ -244,6 +287,14 @@ void App::UpdateWorld()
 	gamemap.Update();
 }
 
+bool intersects(Entity *e1, Entity *e2)
+{
+	float radii = e1->radius + e2->radius;
+	float distance = glm::distance( glm::vec2(e1->x, e1->y), glm::vec2(e2->x, e2->y));
+
+	return (radii > distance);
+}
+
 void App::UpdatePlayer(float dt)
 {
 	float dx = 0.0f;
@@ -255,6 +306,18 @@ void App::UpdatePlayer(float dt)
 	if (moving_down) dy += 1.0f;
 
 	if (dx or dy) PlayerMove(dx, dy, dt);
+
+	for (Entity *e : entities)
+	{
+		if (intersects(player, e))
+		{
+			if (Gem *gem = dynamic_cast<Gem*>(e))
+			{
+				e->done = true;
+				player->score++;
+			}
+		}
+	}
 }
 
 
@@ -399,10 +462,14 @@ void App::Render()
 
 	for (Entity *e : entities)
 	{
-		e->Draw(cam, mapcam);
+		Tile *t = gamemap.FindNearest(glm::vec2(e->x, e->y));
+		glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
+		e->Draw(cam, mapcam, col);
 	}
 
-	player->Draw(cam, mapcam);
+	Tile *t = gamemap.FindNearest(glm::vec2(player->x, player->y));
+	glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
+	player->Draw(cam, mapcam, col);
 
 	RenderGUI();
 
@@ -422,7 +489,11 @@ void App::RenderGUI()
 	cursorpos << "(" << hover.x << "," << hover.y << ")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count
 				<< " offscreen lights)  Entities " << entities.size();
 
-	font.Draw(ortho, 10, APP_HEIGHT - 12, 12, "This is some status line text.  42  " + cursorpos.str());
+
+	std::stringstream statusline;
+	statusline << "Score " << player->score << "    ";
+
+	font.Draw(ortho, 10, APP_HEIGHT - 12, 12, statusline.str() + cursorpos.str());
 
 	std::stringstream status_light;
 	status_light << "(Current light Colour) " << CurrentLightName << ", Radius " << current_light_radius;

@@ -13,9 +13,10 @@
 
 #include "opengl.h"
 
+#include <time.h>
+
 int run(int argc, char *argv[])
 {
-
 	auto InitFlags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
 
 	if (SDL_Init(InitFlags) < 0)
@@ -158,10 +159,13 @@ void ChangeDirectoryToHere(char* argv0)
 
 #endif
 
+
 int main(int argc, char *argv[])
 {
 	LOG("Hello LD world!");
 	LOGf("Hi %s ", "there");
+
+	srand(time(nullptr));
 
 	int ret = 0;
 	try

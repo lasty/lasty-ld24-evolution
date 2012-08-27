@@ -43,6 +43,9 @@ protected:
 
 
 public:
+
+	glm::vec3 GetCol() const { return colour; }
+
 	bool block_light = false;
 	bool block_movement = false;
 

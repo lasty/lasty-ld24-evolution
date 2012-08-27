@@ -39,12 +39,15 @@ public:
 	static Factory &GetInstance();
 };
 
+class DLight;
 
 class Entity
 {
 public:
 	Entity();
 	virtual ~Entity();
+
+	bool done = false;
 
 	glm::mat4 model_matrix;
 
@@ -58,18 +61,26 @@ public:
 
 	virtual void Update(float dt);
 
-	virtual void Draw(const glm::mat4 &proj, const glm::mat4 &view){ THROW(Exception,"Shouldnt be here"); }
+	virtual void Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol){ THROW(Exception,"Shouldnt be here"); }
 
+	virtual DLight* GetLight() { return nullptr; }
 };
 
 
 class Player : public Entity
 {
 public:
+	int skin = 0;
+
+	int score = 0;
+
 	Player();
 	virtual ~Player();
 	void Update(float dt);
-	void Draw(const glm::mat4 &proj, const glm::mat4 &view);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
+
+	DLight* GetLight();
+
 };
 
 
@@ -80,7 +91,9 @@ public:
 	virtual ~Gem();
 
 	void Update(float dt);
-	void Draw(const glm::mat4 &proj, const glm::mat4 &view);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
+
+	DLight* GetLight();
 };
 
 #endif /* _LASTY_LD24_ENTITY_H_ */

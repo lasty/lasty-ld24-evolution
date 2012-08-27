@@ -92,7 +92,7 @@ public:
 	void Use();
 
 	void LoadSource(const std::string &filename);
-	void LoadSource(std::istream &in);
+	void LoadSource(std::istream &in, bool with_lines);
 
 	void Link();
 	void Validate();

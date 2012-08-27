@@ -16,7 +16,11 @@
 
 #ifdef USE_GLEW
 
-#include "GL/glew.h"
+#ifdef __APPLE__
+#include <glew.h>
+#else
+#include <GL/glew.h>
+#endif
 
 #else
 

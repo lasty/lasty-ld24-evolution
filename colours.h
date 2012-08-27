@@ -34,19 +34,37 @@ static glm::vec3 light_torch(2.0f, 2.0f, 1.5f);
 static glm::vec3 light_player(2.0f, 2.0f, 2.0f);
 
 
-static std::vector<std::pair<std::string, glm::vec3>>
-lights_array{
-	{ "White", light_white },
-	{ "OffWhite", light_offwhite},
-	{ "Yellow", light_yellow},
-	{ "Red", light_red},
+static std::string
+lights_array_names[]=
+{
+	 "White",
+	 "OffWhite",
+	 "Yellow",
+	 "Red",
 
-	{ "Blue", light_blue},
-	{ "Cyan", light_cyan},
+	 "Blue",
+	 "Cyan",
 
-	{ "Torchlight", light_torch },
-	{ "PlayerLight", light_player }
+	 "Torchlight",
+	 "PlayerLight"
 };
 
+
+static glm::vec3
+lights_array[]=
+{
+	 light_white,
+	 light_offwhite,
+	 light_yellow,
+	 light_red,
+
+	 light_blue,
+	 light_cyan,
+
+	 light_torch,
+	 light_player
+};
+
+constexpr size_t lights_array_count = 8;
 
 #endif /* _LASTY_LD24_COLOURS_H_ */

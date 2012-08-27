@@ -152,9 +152,16 @@ void ChangeDirectoryToHere(char* argv0)
 
 void ChangeDirectoryToHere(char* argv0)
 {
-	*strrchr(argv0, '\\') = '\0';  //Chop off filename part
-	LOGf("My path is %s", argv0);
-	chdir(argv0);
+	LOGf("Argv0 is  %s", argv0);
+	char *path = strdup(argv0);
+	char *pos = strrchr(path, '/');
+	if (pos != nullptr)
+	{
+		*pos = '\0';  //Chop off filename part
+		LOGf("My path is %s", path);
+		chdir(path);
+	}
+	free(path);
 }
 
 #endif
@@ -164,6 +171,7 @@ int main(int argc, char *argv[])
 {
 	LOG("Hello LD world!");
 	LOGf("Hi %s ", "there");
+	LOGf("Argv[0] is %s ", argv[0]);
 
 	srand(time(nullptr));
 

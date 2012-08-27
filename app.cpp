@@ -71,12 +71,12 @@ void App::GenMap()
 		float lx = RandFloat(1.0f, gamemap.mapsizex);
 		float ly = RandFloat(1.0f, gamemap.mapsizey);
 
-		int li = RandInt(0, lights_array.size()-1);
+		int li = RandInt(0, lights_array_count-1);
 		int type = RandInt(0, 2);
 
 		float r = RandFloat(2.0f, 10.0f);
 
-		AddDlight(glm::vec2{lx, ly}, lights_array[li].second, r, type);
+		AddDlight(glm::vec2{lx, ly}, lights_array[li], r, type);
 	}
 
 	//add in some gems
@@ -434,9 +434,9 @@ void App::AddDlight(glm::vec2 pos, glm::vec3 color, float radius, int type)
 
 void App::ChangeLight(int inc)
 {
-	current_light_index = (current_light_index + inc) % lights_array.size();
-	CurrentLightName = lights_array[current_light_index].first;
-	current_light_colour = lights_array[current_light_index].second;
+	current_light_index = (current_light_index + inc) % lights_array_count;
+	CurrentLightName = lights_array_names[current_light_index];
+	current_light_colour = lights_array[current_light_index];
 }
 
 void App::RenderWorld()

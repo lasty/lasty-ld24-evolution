@@ -12,7 +12,12 @@
 
 #include "opengl.h"
 
+#ifdef __APPLE__
+#include <SDL_image.h>
+#else
 #include <SDL2/SDL_image.h>
+#endif
+
 #include <glm.hpp>
 
 class Image

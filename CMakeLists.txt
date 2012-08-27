@@ -2,7 +2,11 @@
 cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH $(CMAKE_MODULE_PATH) "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
+if(APPLE)
+set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -Wno-comment" )
+else()
 set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++ -Wno-comment" )
+endif()
 
 set(SOURCES main.cpp app.cpp vertexbuffer.cpp primitives.cpp
 	 program.cpp image.cpp font.cpp
@@ -16,10 +20,10 @@ add_executable(evolution ${SOURCES})
 
 find_package(SDL2)
 find_package(SDL2_image)
-include_directories( ${SDL_INCLUDE_DIR} )
+include_directories( ${SDL_INCLUDE_DIR} ${SDLIMAGE_INCLUDE_DIR} )
 
 find_package(GLEW)
-include_directories(GLEW_INCLUDE_DIR)
+include_directories(${GLEW_INCLUDE_DIR})
 
 find_package(OPENGL)
 include_directories(${OPENGL_INCLUDE_DIR})

@@ -125,11 +125,19 @@ void Program::LoadSource(const std::string &filename)
 	//LOGf("filename is: '%s'", filename.c_str());
 	this->filename = filename;
 
-	std::ifstream in(std::string(DATA_DIR) + filename);
-	LoadSource(in);
+	try {
+		//try with #line injection (easier to debug)
+		std::ifstream in( (std::string(DATA_DIR) + filename).c_str() );
+		LoadSource(in, true);
+	} catch (ShaderError)
+	{
+		//try again without the #line injection
+		std::ifstream in( (std::string(DATA_DIR) + filename).c_str() );
+		LoadSource(in, false);
+	}
 }
 
-void Program::LoadSource(std::istream &in)
+void Program::LoadSource(std::istream &in, bool with_lines)
 {
 
 	std::stringstream vsrc;
@@ -143,7 +151,7 @@ void Program::LoadSource(std::istream &in)
 	getline(in, line);
 	lineno++;
 
-	vsrc << "#line " << lineno - 1 << " \"" << filename << "\"" << "\n";
+	if (with_lines) vsrc << "#line " << lineno - 1 << " \"" << filename << "\"" << "\n";
 
 	while ((in.good() and not in.eof()) and line != token)
 	{
@@ -155,7 +163,7 @@ void Program::LoadSource(std::istream &in)
 	getline(in, line);
 	//lineno++;  //Validate log is off by one, but compile log is correct
 
-	fsrc << "#line " << lineno - 1 << " \"" << filename << "\"" << "\n";
+	if (with_lines) fsrc << "#line " << lineno - 1 << " \"" << filename << "\"" << "\n";
 
 	while ((in.good() and not in.eof()) and line != token)
 	{
@@ -163,6 +171,8 @@ void Program::LoadSource(std::istream &in)
 		getline(in, line);
 		lineno++;
 	}
+
+LOGf("VS Shader:::\n%s", vsrc.str().c_str());
 
 	vs.LoadSource(vsrc.str());
 	vs.Compile();

@@ -11,7 +11,7 @@ varying vec2 varying_texcoords;
 
 void main()
 {
-	varying_colour = vec4(vertex_colour, 1.0f); 
+	varying_colour = vec4(vertex_colour, 1.0); 
 	varying_texcoords = vertex_texcoords;
 	
 	gl_Position = projection_matrix * modelview_matrix * vec4(vertex_position, 1.0);

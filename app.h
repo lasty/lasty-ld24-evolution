@@ -11,6 +11,7 @@
 
 #include "entity.h"
 
+#include "audio.h"
 
 #include <SDL2/SDL.h>
 
@@ -51,6 +52,11 @@ public:
 	void RenderGUI();
 	void RenderWorld();
 	void UpdateWorld();
+
+	Wave startup, coin, noise;
+
+	Audio audio;
+
 
 	glm::mat4 ortho;
 
@@ -93,6 +99,7 @@ public:
 	void OnKeyDown(SDL_Keysym key);
 	void OnKeyUp(SDL_Keysym key);
 
+	void DropTorch();
 
 	void UpdatePlayer(float dt);
 	float player_move_speed = 4.0f;  //world units per second

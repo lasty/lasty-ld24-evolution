@@ -17,7 +17,7 @@
 
 int run(int argc, char *argv[])
 {
-	auto InitFlags = SDL_INIT_VIDEO | SDL_INIT_TIMER;
+	auto InitFlags = SDL_INIT_VIDEO  |  SDL_INIT_AUDIO  | SDL_INIT_TIMER;
 
 	if (SDL_Init(InitFlags) < 0)
 	{

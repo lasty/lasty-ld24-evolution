@@ -9,7 +9,7 @@ set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++ -Wno-co
 endif()
 
 set(SOURCES main.cpp app.cpp vertexbuffer.cpp primitives.cpp
-	 program.cpp image.cpp font.cpp
+	 program.cpp image.cpp font.cpp audio.cpp
 	 tileboard.cpp entity.cpp)
 set(DATA_DIRS data)
 

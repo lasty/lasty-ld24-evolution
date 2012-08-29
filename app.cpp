@@ -26,8 +26,11 @@
 
 #include "entity.h"
 
+#include "audio.h"
+
 App::App()
-: prim(vb)
+: startup("startup.wav"), coin("pickup_coin.wav"), noise("noise.wav")
+, prim(vb)
 {
 	//vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
 	//vb.Update();
@@ -56,6 +59,8 @@ App::App()
 
 
 	GenMap();
+
+	audio.PlaySound(startup);
 }
 
 
@@ -114,10 +119,8 @@ void App::GenMap()
 	gamemap.ClearArea(player->x, player->y);
 
 
-	Gem *g = new Gem(player->x + 5,player->y);
-
-	entities.push_back( g );
-
+	//Gem *g = new Gem(player->x + 5,player->y);
+	//entities.push_back( g );
 
 }
 
@@ -320,6 +323,7 @@ void App::UpdatePlayer(float dt)
 			{
 				e->done = true;
 				player->score++;
+				audio.PlaySound(coin);
 			}
 		}
 	}
@@ -507,6 +511,13 @@ void App::RenderGUI()
 
 }
 
+void App::DropTorch()
+{
+	AddDlight(hover, light_torch, 4);
+	audio.PlaySound(noise);
+
+}
+
 void App::OnMouseDown(int x, int y, int button)
 {
 	if (button == 2 or button == 3)
@@ -519,7 +530,7 @@ void App::OnMouseDown(int x, int y, int button)
 		mouse_dragging_lights = true;
 		AddDlight(hover, current_light_colour, current_light_radius);
 #else
-		AddDlight(hover, light_torch, 4);
+		DropTorch();
 #endif
 
 	}

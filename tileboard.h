@@ -34,33 +34,51 @@ static TileDef tile_wall1(2,0,4,4, true);
 class Tile : public Primitive
 {
 protected:
-	friend class TileBoard;
-
-	glm::vec3 colour;
-	glm::vec3 ambient_colour;
-
-	bool dirty = true;
-
+//	glm::vec3 avg_colour;
 
 public:
 
-	glm::vec3 GetCol() const { return colour; }
+//	glm::vec3 GetCol() const { return avg_colour; }
 
 	bool block_light = false;
 	bool block_movement = false;
 
 	Tile(VertexBuffer* vb, int x, int y);
 
-	void SetDynamic(const glm::vec3 &col);
-	void SetAmbient(const glm::vec3 &col);
-	void ReSetAmbient();
-
-	void Update();
-	void UpdateColour(const glm::vec3 &col);
-
+//	void SetAverageColour(const glm::vec3 &col) { avg_colour = col; }
 
 	void SetUV(const TileDef &t);
 
+	Vertex * GetV(int which) const;
+};
+
+class LightPoint
+{
+protected:
+	friend class TileBoard;
+
+	bool dirty = true;
+
+	glm::vec3 colour;
+	glm::vec3 ambient_colour;
+
+
+	std::vector<Vertex *> vertex_refs;
+
+public:
+	LightPoint();
+	~LightPoint();
+
+	void AddVertex(Vertex *v);
+	void Clear();
+
+	void ResetDynamic();
+	void SetAmbient(const glm::vec3 &col);
+	void SetDynamic(const glm::vec3 &col);
+
+	void Update();
+
+	const glm::vec3 &GetCol() const { return colour; }
 };
 
 class TileBoard
@@ -75,6 +93,8 @@ public:
 
 	std::vector<std::vector<Tile*>> map;
 
+	std::vector<std::vector<LightPoint>> lightmap;
+
 	TileBoard();
 
 	virtual ~TileBoard();
@@ -86,10 +106,11 @@ public:
 	void Draw(const glm::mat4 &camera, const glm::mat4 &mv);
 	void Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x2, int y1, int y2);
 
-	void ReSetAmbient();  //Call this to reset to static background before applying dynamic lights
+	void ResetDynamicLights();  //Call this to reset to static background before applying dynamic lights
 	void Update();
 
-	Tile * FindNearest(const glm::vec2 &cursor);  //find nearest tile from world coordinates cursor
+	Tile * FindNearestTile(const glm::vec2 &cursor);  //find nearest tile from world coordinates cursor
+	LightPoint * FindNearestLightPoint(const glm::vec2 &cursor);
 	inline bool IsBlocking(int px, int py);
 
 	int CheckBlockPath(int x1, int y1, int x2, int y2);  //find any blocked tiles in a line

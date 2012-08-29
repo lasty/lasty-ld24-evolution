@@ -83,7 +83,7 @@ void Font::SetupFont()
 		x++;
 	}
 	x = 12;
-	for (char ch : "(),.")
+	for (const char ch : "(),.")
 	{
 		glyphs[ch] = CreateGlyph(ch, x, 7, 16);
 		x++;
@@ -92,7 +92,7 @@ void Font::SetupFont()
 
 void Font::DestroyFont()
 {
-	for (auto i : glyphs)
+	for (auto &i : glyphs)
 	{
 		delete i.second;
 	}
@@ -128,7 +128,7 @@ void Font::Draw(const glm::mat4& proj, const glm::mat4& mv_orig, const std::stri
 	program.Use();
 	program.SetProjectionMatrix(proj);
 
-	for (char ch : text)
+	for (const char &ch : text)
 	{
 		program.SetModelViewMatrix(mv);
 		Draw(ch);

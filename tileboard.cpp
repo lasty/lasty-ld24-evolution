@@ -18,50 +18,19 @@ Tile::Tile(VertexBuffer* vb, int x, int y)
 {
 	const float size = 1.0;
 	const float half = (size / 2.0) + 0.01;
-	const float xoff = x * size;
-	const float yoff = y * size;
+
+	const float x1 = (x * size) - half;
+	const float x2 = ((x+1) * size) - half;
+	const float y1 = (y * size) - half;
+	const float y2 = ((y+1) * size) - half;
+
 
 	Begin(GL_TRIANGLE_FAN);
-	Add( {xoff - half, yoff - half, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0});  //topleft
-	Add( {xoff + half, yoff - half, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0});  //topright
-	Add( {xoff + half, yoff + half, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0});  //botright
-	Add( {xoff - half, yoff + half, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0});  //botleft
+	Add( {x1, y1, 0.0, 1.0, 1.0, 1.0, 0.0, 0.0});  //topleft
+	Add( {x2, y1, 0.0, 1.0, 1.0, 1.0, 1.0, 0.0});  //topright
+	Add( {x2, y2, 0.0, 1.0, 1.0, 1.0, 1.0, 1.0});  //botright
+	Add( {x1, y2, 0.0, 0.0, 1.0, 1.0, 0.0, 1.0});  //botleft
 	//End();
-}
-
-void Tile::ReSetAmbient()
-{
-	colour = ambient_colour;
-	dirty = true;
-}
-
-void Tile::SetAmbient(const glm::vec3 &col)
-{
-	ambient_colour = colour = col;
-	dirty = true;
-}
-
-void Tile::SetDynamic(const glm::vec3 &col)
-{
-	colour += col;
-	dirty = true;
-}
-
-void Tile::Update()
-{
-	UpdateColour(colour);
-	dirty = false;
-}
-
-void Tile::UpdateColour(const glm::vec3 &col)
-{
-	for (unsigned i = 0; i < count; ++i)
-	{
-		Vertex &v = vbuff->at(begin + i);
-		v.r = col[0];
-		v.g = col[1];
-		v.b = col[2];
-	}
 }
 
 void Tile::SetUV(const TileDef &t)
@@ -75,10 +44,66 @@ void Tile::SetUV(const TileDef &t)
 
 	block_light = t.blocks_light;
 	block_movement = t.block_movement;
-	dirty = true;
+	//dirty = true;
+}
+
+Vertex * Tile::GetV(int which) const
+{
+	return &(vbuff->at(begin + which - 1));
 }
 
 //////////////////////////////////////////////////////////////////////////////
+
+LightPoint::LightPoint()
+:dirty(false), colour(0.5), ambient_colour(0.2)
+{}
+
+LightPoint::~LightPoint()
+{ }
+
+void LightPoint::AddVertex(Vertex *v)
+{
+	vertex_refs.push_back(v);
+}
+
+void LightPoint::Clear()
+{
+	vertex_refs.clear();  //we don't own the pointers so dont delete
+}
+
+
+void LightPoint::ResetDynamic()
+{
+	colour = ambient_colour;
+	dirty = true;
+}
+
+void LightPoint::SetAmbient(const glm::vec3 &col)
+{
+	ambient_colour = col;
+	dirty = true;
+}
+
+void LightPoint::SetDynamic(const glm::vec3 &col)
+{
+	colour += col;
+	dirty = true;
+}
+
+void LightPoint::Update()
+{
+	for (Vertex *v : vertex_refs)
+	{
+		v->r = colour.r;
+		v->g = colour.g;
+		v->b = colour.b;
+	}
+	dirty = false;
+}
+
+
+//////////////////////////////////////////////////////////////////////////////
+
 
 TileBoard::TileBoard()
 : vb(GL_DYNAMIC_DRAW)
@@ -86,6 +111,7 @@ TileBoard::TileBoard()
 	program.LoadSource("basic.shader");
 	//tiletexture.LoadFile("tex1.png");
 	tiletexture.LoadFile("tiles.png");
+	tiletexture.SetBlend(false);
 	program.SetTexture(tiletexture);
 
 }
@@ -98,6 +124,7 @@ TileBoard::~TileBoard()
 void TileBoard::Create(int width, int height)
 {
 	Destroy();
+	//width = 5; height = 5;
 	mapsizex = width;
 	mapsizey = height;
 
@@ -111,19 +138,56 @@ void TileBoard::Create(int width, int height)
 		map.push_back(row);
 	}
 
-	//GenerateTerrain(); Called from within app now
+
+	for (int y=0; y <= height; y++)  //light map is 1 more in width/height
+	{
+		std::vector<LightPoint> row;
+
+		for (int x=0; x <= width; x++)
+		{
+			//LOGf("\n-------( %d , %d )----", x, y);
+			LightPoint lp;
+			float x2 = x - 0.5;  //adjust to the point to be in world coordinates
+			float y2 = y - 0.5;
+
+			Tile * tl = FindNearestTile( glm::vec2(x2-0.5, y2-0.5) );
+			if (tl) lp.AddVertex(tl->GetV(3));
+			//if (tl) LOG("top left");
+
+			Tile * tr = FindNearestTile( glm::vec2(x2+0.5, y2-0.5) );
+			if (tr) lp.AddVertex(tr->GetV(4));
+			//if (tr) LOG("top right");
+
+			Tile * br = FindNearestTile( glm::vec2(x2+0.5, y2+0.5) );
+			if (br) lp.AddVertex(br->GetV(1));
+			//if (br) LOG("bottom right");
+
+			Tile * bl = FindNearestTile( glm::vec2(x2-0.5, y2+0.5) );
+			if (bl) lp.AddVertex(bl->GetV(2));
+			//if (bl) LOG("bottom left");
+
+			//LOGf("x,y = %d, %d  -- size is %d", x, y, lp.vertex_refs.size());
+			ASSERT (lp.vertex_refs.size() <=4,  "Too many vertexes");
+			ASSERT (lp.vertex_refs.size() >0,  "Too few vertexes");
+			row.push_back(lp);
+		}
+		lightmap.push_back(row);
+	}
+
+	//ASSERT(false, "break");
 }
 
 void TileBoard::Destroy()
 {
-	for (auto row : map)
+	for (auto &row : map)
 	{
-		for (auto col : row)
+		for (auto &col : row)
 		{
 			delete (col);
 		}
 	}
 	map.clear();
+	lightmap.clear();
 }
 
 void TileBoard::Draw(const glm::mat4 &camera, const glm::mat4 &mv)
@@ -155,26 +219,26 @@ void TileBoard::Draw(const glm::mat4 &camera, const glm::mat4 &mv, int x1, int x
 	}
 }
 
-void TileBoard::ReSetAmbient()
+void TileBoard::ResetDynamicLights()
 {
-	for (auto row : map)
+	for (auto &row : lightmap)
 	{
-		for (auto cell : row)
+		for (auto &cell : row)
 		{
-			cell->ReSetAmbient();
+			cell.ResetDynamic();
 		}
 	}
 }
 
 void TileBoard::Update()
 {
-	for (auto row : map)
+	for (auto &row : lightmap)
 	{
-		for (auto cell : row)
+		for (auto &cell : row)
 		{
-			if (cell->dirty)
+			if (cell.dirty)
 			{
-				cell->Update();
+				cell.Update();
 			}
 		}
 	}
@@ -182,7 +246,7 @@ void TileBoard::Update()
 	vb.Update();
 }
 
-Tile * TileBoard::FindNearest(const glm::vec2 &cursor)
+Tile * TileBoard::FindNearestTile(const glm::vec2 &cursor)
 {
 	int x = roundf(cursor.x);
 	int y = roundf(cursor.y);
@@ -196,6 +260,23 @@ Tile * TileBoard::FindNearest(const glm::vec2 &cursor)
 
 	return t;
 }
+
+
+LightPoint * TileBoard::FindNearestLightPoint(const glm::vec2 &cursor)
+{
+	int x = roundf(cursor.x-0.5);
+	int y = roundf(cursor.y-0.5);
+
+	if (x < 0 or x >= mapsizex+1) return nullptr;
+	if (y < 0 or y >= mapsizey+1) return nullptr;
+
+	//LOGf("Finding map tile %d, %d", x, y);
+
+	LightPoint *lp = &(lightmap[y][x]);
+
+	return lp;
+}
+
 
 void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, float radius)
 {
@@ -219,7 +300,7 @@ void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, 
 			float y = iy;
 			glm::vec2 current(x, y);
 
-			Tile *t = map[y][x];
+			LightPoint &lp = lightmap[iy][ix];
 
 			float distance = glm::distance(position, glm::vec2(x, y));
 
@@ -236,7 +317,7 @@ void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, 
 
 			glm::vec3 falloffcol = colour * brightness;
 
-			t->SetDynamic(falloffcol);
+			lp.SetDynamic(falloffcol);
 		}
 	}
 
@@ -245,9 +326,9 @@ void TileBoard::DynamicLight(const glm::vec2 &position, const glm::vec3 colour, 
 
 void TileBoard::GenerateTerrain()
 {
-	for (auto y : map)
+	for (auto &y : map)
 	{
-		for (auto i : y)
+		for (auto &i : y)
 		{
 			int r = RandInt(0, 6);
 			switch (r)
@@ -268,12 +349,18 @@ void TileBoard::GenerateTerrain()
 				break;
 
 			}
-
-
-			float c = RandFloat(0.05f, 0.2f);
-			i->SetAmbient(glm::vec3{c});
 		}
 	}
+
+	for (auto &y: lightmap)
+	{
+		for (auto &i : y)
+		{
+			float c = RandFloat(0.05f, 0.2f);
+			i.SetAmbient(glm::vec3{c});
+		}
+	}
+
 }
 
 void TileBoard::ClearArea(float px, float py, int radius)

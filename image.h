@@ -44,6 +44,7 @@ public:
 
 
 	void SetBlend(GLenum f1, GLenum f2);
+	void SetBlend(bool onoff) { blended = onoff; }
 
 	static glm::mat4x2 GetGridUV(int x, int y, int xtiles, int ytiles, int res);
 

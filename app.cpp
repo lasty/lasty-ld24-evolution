@@ -17,6 +17,7 @@
 
 #include <sstream>
 #include <iomanip>
+#include <algorithm>
 
 #include <math.h>
 #include <gtc/matrix_transform.hpp>
@@ -189,7 +190,7 @@ void App::Update(float dt)
 	UpdatePlayer(dt);
 
 
-	gamemap.ReSetAmbient();  //Clear last frame's dynamic lights
+	gamemap.ResetDynamicLights();  //Clear last frame's dynamic lights
 
 
 	player->Update(dt);
@@ -203,22 +204,26 @@ void App::Update(float dt)
 		}
 	}
 
-	//Delete finished entities (probably a better way to do this)
+	/*
+	//STL/lambda version, doesn't seem to work, causes crashes?
+	auto pend = std::remove_if(entities.begin(), entities.end(), [](Entity *i) { return i->done; } );
+	for_each(pend, entities.end(), [](Entity *i) { delete (i); });
+	entities.erase(pend, entities.end());
+	*/
+
+	//Delete finished entities
 	for (auto i = entities.begin();  i != entities.end(); )
 	{
 		if ((*i)->done)
 		{
 			delete (*i);
-			entities.erase(i);
-			i = entities.begin();
+			i = entities.erase(i);
 			continue;
 		}
 		i++;
 	}
 
-
 	UpdateWorld();
-
 }
 
 void App::UpdateWorld()
@@ -324,7 +329,7 @@ void App::UpdatePlayer(float dt)
 //does this point intersect the world?
 bool App::CollidePoint(float x, float y)
 {
-	Tile *t = gamemap.FindNearest(glm::vec2(x, y));
+	Tile *t = gamemap.FindNearestTile(glm::vec2(x, y));
 
 	if (t == nullptr) return true;  //clip on edge of world
 
@@ -462,12 +467,12 @@ void App::Render()
 
 	for (Entity *e : entities)
 	{
-		Tile *t = gamemap.FindNearest(glm::vec2(e->x, e->y));
+		LightPoint *t = gamemap.FindNearestLightPoint(glm::vec2(e->x, e->y));
 		glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
 		e->Draw(cam, mapcam, col);
 	}
 
-	Tile *t = gamemap.FindNearest(glm::vec2(player->x, player->y));
+	LightPoint *t = gamemap.FindNearestLightPoint(glm::vec2(player->x, player->y));
 	glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
 	player->Draw(cam, mapcam, col);
 

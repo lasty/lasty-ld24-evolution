@@ -125,11 +125,13 @@ void Program::LoadSource(const std::string &filename)
 	//LOGf("filename is: '%s'", filename.c_str());
 	this->filename = filename;
 
-	try {
+	try
+	{
 		//try with #line injection (easier to debug)
 		std::ifstream in( (std::string(DATA_DIR) + filename).c_str() );
 		LoadSource(in, true);
-	} catch (ShaderError)
+	}
+	catch (ShaderError &e)
 	{
 		//try again without the #line injection
 		std::ifstream in( (std::string(DATA_DIR) + filename).c_str() );
@@ -172,7 +174,7 @@ void Program::LoadSource(std::istream &in, bool with_lines)
 		lineno++;
 	}
 
-LOGf("VS Shader:::\n%s", vsrc.str().c_str());
+//	LOGf("VS Shader:::\n%s", vsrc.str().c_str());
 
 	vs.LoadSource(vsrc.str());
 	vs.Compile();

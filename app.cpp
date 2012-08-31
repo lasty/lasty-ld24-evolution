@@ -29,7 +29,14 @@
 #include "audio.h"
 
 App::App()
-: startup("startup.wav"), coin("pickup_coin.wav"), noise("noise.wav")
+: running(true)
+, startup("startup.wav")
+, noise("noise.wav")
+, explosion("explosion.wav")
+, laser("laser.wav")
+, hit("hit.wav")
+, pickup_coin("pickup_coin.wav")
+, pickup_gem("gem.wav")
 , prim(vb)
 {
 	//vb.push_back( {0, 0, 0, 1, 1, 1, 0, 1});
@@ -71,6 +78,7 @@ void App::GenMap()
 
 	gamemap.GenerateTerrain();
 
+	/*
 	//add in some dynamic lights for effect
 	for (int i = 1; i < 100; ++i)
 	{
@@ -84,9 +92,30 @@ void App::GenMap()
 
 		AddDlight(glm::vec2{lx, ly}, lights_array[li], r, type);
 	}
+	*/
+
+	const int NUM_GEMS = 100;
+	const int NUM_COINS = 100;
+	const int NUM_ROCKS = 1000;
+
+	for (int i = 1; i < NUM_ROCKS; ++i)
+	{
+		int gx = RandInt(0, gamemap.mapsizex);
+		int gy = RandInt(0, gamemap.mapsizey);
+
+		entities.push_back(new Rock(gx, gy));
+	}
+
+	for (int i = 1; i < NUM_COINS; ++i)
+	{
+		int gx = RandInt(0, gamemap.mapsizex);
+		int gy = RandInt(0, gamemap.mapsizey);
+
+		entities.push_back(new Coin(gx, gy));
+	}
 
 	//add in some gems
-	for (int i = 1; i < 100; ++i)
+	for (int i = 1; i < NUM_GEMS; ++i)
 	{
 		int gx = RandInt(0, gamemap.mapsizex);
 		int gy = RandInt(0, gamemap.mapsizey);
@@ -197,37 +226,54 @@ void App::Update(float dt)
 
 
 	player->Update(dt);
-	for (Entity *e : entities)
-	{
-		e->Update(dt);
 
-		DLight *l = e->GetLight();
-		if (l){
-			gamemap.DynamicLight(glm::vec2(e->x, e->y), l->colour, l->radius);
-		}
-	}
-
-	/*
-	//STL/lambda version, doesn't seem to work, causes crashes?
-	auto pend = std::remove_if(entities.begin(), entities.end(), [](Entity *i) { return i->done; } );
-	for_each(pend, entities.end(), [](Entity *i) { delete (i); });
-	entities.erase(pend, entities.end());
-	*/
-
-	//Delete finished entities
 	for (auto i = entities.begin();  i != entities.end(); )
 	{
-		if ((*i)->done)
+		Entity *e = *i;
+
+		e->Update(dt);
+
+		if (e->done)
 		{
-			delete (*i);
+			delete e;
 			i = entities.erase(i);
 			continue;
 		}
+
+		DLight *l = e->GetLight();
+		if (l and LightIsOnScreen(e->x, e->y, l->radius))
+		{
+			gamemap.DynamicLight(glm::vec2(e->x, e->y), l->colour, l->radius);
+		}
+
 		i++;
 	}
 
 	UpdateWorld();
 }
+
+
+bool App::LightIsOnScreen(float x, float y, float radius)
+{
+	const float left = (x - radius);
+	const float right = (x + radius);
+
+	if ((left > botright.x) or (right < topleft.x))
+	{
+		return false;
+	}
+
+	const float top = (y - radius);
+	const float bot = (y + radius);
+
+	if ((top > botright.y) or (bot < topleft.y))
+	{
+		return false;
+	}
+
+	return true;
+}
+
 
 void App::UpdateWorld()
 {
@@ -256,19 +302,7 @@ void App::UpdateWorld()
 	for (auto &l : dlights)
 	{
 		//Cull lights we don't see on screen
-		const float left = (l.position.x - l.radius);
-		const float right = (l.position.x + l.radius);
-
-		if ((left > botright.x) or (right < topleft.x))
-		{
-			cull_count++;
-			continue;
-		}
-
-		const float top = (l.position.y - l.radius);
-		const float bot = (l.position.y + l.radius);
-
-		if ((top > botright.y) or (bot < topleft.y))
+		if (not LightIsOnScreen(l.position.x, l.position.y, l.radius))
 		{
 			cull_count++;
 			continue;
@@ -303,8 +337,12 @@ bool intersects(Entity *e1, Entity *e2)
 	return (radii > distance);
 }
 
+
 void App::UpdatePlayer(float dt)
 {
+	const int VALUE_COIN = 1;
+	const int VALUE_GEM = 10;
+
 	float dx = 0.0f;
 	float dy = 0.0f;
 
@@ -312,6 +350,10 @@ void App::UpdatePlayer(float dt)
 	if (moving_right) dx += 1.0f;
 	if (moving_up) dy -= 1.0f;
 	if (moving_down) dy += 1.0f;
+
+	//hacky but
+	float origx = player->x;
+	float origy = player->y;
 
 	if (dx or dy) PlayerMove(dx, dy, dt);
 
@@ -321,9 +363,25 @@ void App::UpdatePlayer(float dt)
 		{
 			if (Gem *gem = dynamic_cast<Gem*>(e))
 			{
-				e->done = true;
-				player->score++;
-				audio.PlaySound(coin);
+				gem->done = true;
+				player->score+=VALUE_GEM;
+				audio.PlaySound(pickup_gem);
+			}
+			else if (Coin *coin = dynamic_cast<Coin*>(e))
+			{
+				coin->done = true;
+				player->score+=VALUE_COIN;
+				audio.PlaySound(pickup_coin);
+			}
+			else if (Rock *rock = dynamic_cast<Rock*>(e))
+			{
+				float dist = 1;
+				//bump the entity
+				MoveEntity(rock, dx*dist, dy*dist);
+
+				//undo the move
+				player->x = origx;
+				player->y = origy;
 			}
 		}
 	}
@@ -520,11 +578,11 @@ void App::DropTorch()
 
 void App::OnMouseDown(int x, int y, int button)
 {
-	if (button == 2 or button == 3)
+	if (button == 1 or button == 3)
 	{
 		mouse_dragging = true;
 	}
-	if (button == 1)
+	if (button == 3)
 	{
 #ifdef debug_lights
 		mouse_dragging_lights = true;

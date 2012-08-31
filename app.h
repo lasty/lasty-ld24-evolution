@@ -53,7 +53,14 @@ public:
 	void RenderWorld();
 	void UpdateWorld();
 
-	Wave startup, coin, noise;
+	Wave startup;
+	Wave noise;
+	Wave explosion;
+	Wave laser;
+	Wave hit;
+	Wave pickup_coin;
+	Wave pickup_gem;
+
 
 	Audio audio;
 
@@ -80,6 +87,7 @@ public:
 	glm::vec3 ambientcolour;
 
 	std::vector<DLight> dlights;
+	bool LightIsOnScreen(float x, float y, float radius);
 	void AddDlight(glm::vec2 pos, glm::vec3 color, float radius, int type=0);
 	void ChangeLight(int inc);
 	glm::vec3 current_light_colour;

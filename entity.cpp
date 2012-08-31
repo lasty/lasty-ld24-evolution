@@ -16,11 +16,15 @@
 #include <glm.hpp>
 #include <gtc/matrix_transform.hpp>
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 inline void TileQuad(Primitive &prim, float zoom, int x, int y, int gridx, int gridy, int res = 512)
 {
 	glm::mat4x2 uv = Image::GetGridUV(x, y, gridx, gridy, res);
 	glm::vec3 c1 = white;
-	glm::vec3 c2 {1, 0.5, 1};
+	glm::vec3 c2 {1, 1, 1};
 
 	prim.Begin(GL_QUADS);
 	prim.Add( {-zoom, -zoom, 0.0, c2.r, c2.g, c2.b, uv[0][0], uv[0][1]});  //topleft
@@ -30,8 +34,13 @@ inline void TileQuad(Primitive &prim, float zoom, int x, int y, int gridx, int g
 	prim.End();
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 Factory::Factory()
 : program1(), vb1(), prim_player1(vb1), prim_player2(vb1), prim_gem(vb1)
+, prim_coin(vb1), prim_rock(vb1)
 {
 	LOG("Factory()");
 
@@ -47,6 +56,8 @@ Factory::Factory()
 	TileQuad(prim_player1, 1.0, 0, 2, 4, 4, 512);
 	TileQuad(prim_player2, 1.0, 1, 2, 4, 4, 512);
 	TileQuad(prim_gem, 1.0, 3, 2, 4, 4, 512);
+	TileQuad(prim_coin, 1.0, 3, 3, 4, 4, 512);
+	TileQuad(prim_rock, 1.0, 3, 1, 4, 4, 512);
 
 }
 
@@ -60,6 +71,10 @@ Factory &Factory::GetInstance()
 	static Factory theinstance;
 	return theinstance;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 Entity::Entity()
 {
@@ -86,6 +101,10 @@ void Entity::Update(float dt)
 
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+
 Player::Player()
 {
 	zoom = 0.5f;
@@ -104,14 +123,17 @@ void Player::Update(float dt)
 void Player::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
 {
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
-	Factory::GetInstance().program2.SetDrawColour(glm::vec4(backgroundcol, 1.0f));
 
 	if (skin == 0)
 	{
+		Factory::GetInstance().program2.SetDrawColour(tint_player1 * glm::vec4(backgroundcol, 1.0f));
+
 		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player1);
 	}
 	else
 	{
+		Factory::GetInstance().program2.SetDrawColour(tint_player1 * glm::vec4(backgroundcol, 1.0f));
+
 		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player2);
 	}
 }
@@ -120,6 +142,10 @@ DLight* Player::GetLight()
 {
 	return nullptr;
 }
+
+
+///////////////////////////////////////////////////////////////////////////////
+
 
 Gem::Gem(float x, float y)
 {
@@ -138,15 +164,71 @@ void Gem::Update(float dt)
 
 void Gem::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
 {
-	glm::vec4 col {0.4f, 0.9f, 0.5f, 1.0f};
 
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
-	Factory::GetInstance().program2.SetDrawColour(col * glm::vec4(backgroundcol, 1.0f));
+	Factory::GetInstance().program2.SetDrawColour(tint_gem * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_gem);
 }
 
 DLight * Gem::GetLight()
 {
-	static DLight gemlight (glm::vec2(0,0), glm::vec3 (0.7, 1.0, 0.7), 5, 1);
+	static DLight gemlight (glm::vec2(0,0), light_gem, 5, 1);
 	return &gemlight;
 }
+
+///////////////////////////////////////////////////////////////////////////////
+
+Coin::Coin(float x, float y)
+{
+	this->x = x;
+	this->y = y;
+	SetModelMatrix();
+}
+Coin::~Coin()
+{
+}
+
+void Coin::Update(float dt)
+{
+
+}
+
+void Coin::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
+{
+	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
+	Factory::GetInstance().program2.SetDrawColour(tint_coin * glm::vec4(backgroundcol, 1.0f));
+	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_coin);
+}
+
+DLight * Coin::GetLight()
+{
+	static DLight coinlight (glm::vec2(0,0), light_coin, 2, 1);
+	return &coinlight;
+}
+
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+Rock::Rock(float x, float y)
+{
+	this->x = x;
+	this->y = y;
+	SetModelMatrix();
+}
+Rock::~Rock()
+{
+}
+
+void Rock::Update(float dt)
+{
+
+}
+
+void Rock::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
+{
+	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
+	Factory::GetInstance().program2.SetDrawColour(tint_rock * glm::vec4(backgroundcol, 1.0f));
+	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_rock);
+}
+

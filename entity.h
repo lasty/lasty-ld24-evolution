@@ -32,6 +32,8 @@ public:
 	Primitive prim_player1;
 	Primitive prim_player2;
 	Primitive prim_gem;
+	Primitive prim_coin;
+	Primitive prim_rock;
 
 	Factory();
 	~Factory();
@@ -94,6 +96,29 @@ public:
 	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
 
 	DLight* GetLight();
+};
+
+class Coin : public Entity
+{
+public:
+	Coin(float x, float y);
+	virtual ~Coin();
+
+	void Update(float dt);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
+
+	DLight* GetLight();
+};
+
+
+class Rock : public Entity
+{
+public:
+	Rock(float x, float y);
+	virtual ~Rock();
+
+	void Update(float dt);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
 };
 
 #endif /* _LASTY_LD24_ENTITY_H_ */

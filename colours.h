@@ -33,9 +33,11 @@ static glm::vec3 light_torch(2.0f, 2.0f, 1.5f);
 
 static glm::vec3 light_player(2.0f, 2.0f, 2.0f);
 
-
 static glm::vec3 light_gem(0.7, 1.0, 0.7);
 static glm::vec3 light_coin(0.9, 0.9, 0.1);
+
+static glm::vec3 light_bullet(2.0, 0.1, 0.1);
+
 
 static glm::vec4 tint_player1(1.0f, 1.0f, 1.0f, 1.0f);
 static glm::vec4 tint_player2(1.0f, 1.0f, 1.0f, 1.0f);
@@ -43,6 +45,8 @@ static glm::vec4 tint_player2(1.0f, 1.0f, 1.0f, 1.0f);
 static glm::vec4 tint_gem(0.4f, 0.9f, 0.5f, 1.0f);
 static glm::vec4 tint_coin(1.0f, 1.0f, 1.0f, 1.0f);
 static glm::vec4 tint_rock(86/256.0f, 67/256.0f, 32/256.0f, 1.0f);
+static glm::vec4 tint_bullet(1.0f, 0.0f, 0.0f, 0.5f);
+
 
 
 static std::string

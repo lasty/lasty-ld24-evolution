@@ -40,7 +40,7 @@ inline void TileQuad(Primitive &prim, float zoom, int x, int y, int gridx, int g
 
 Factory::Factory()
 : program1(), vb1(), prim_player1(vb1), prim_player2(vb1), prim_gem(vb1)
-, prim_coin(vb1), prim_rock(vb1)
+, prim_coin(vb1), prim_rock(vb1), prim_bullet(vb1)
 {
 	LOG("Factory()");
 
@@ -58,6 +58,7 @@ Factory::Factory()
 	TileQuad(prim_gem, 1.0, 3, 2, 4, 4, 512);
 	TileQuad(prim_coin, 1.0, 3, 3, 4, 4, 512);
 	TileQuad(prim_rock, 1.0, 3, 1, 4, 4, 512);
+	TileQuad(prim_bullet, 1.0, 2, 2, 4, 4, 512);
 
 }
 
@@ -230,5 +231,43 @@ void Rock::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &b
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
 	Factory::GetInstance().program2.SetDrawColour(tint_rock * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_rock);
+}
+
+
+
+///////////////////////////////////////////////////////////////////////////////
+Bullet::Bullet(float x, float y, float vx, float vy)
+{
+	this->x = x;
+	this->y = y;
+	this->radius = 0.2;
+
+	velocityx = vx;
+	velocityy = vy;
+
+	SetModelMatrix();
+}
+
+Bullet::~Bullet()
+{
+}
+
+void Bullet::Update(float dt)
+{
+
+}
+
+void Bullet::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
+{
+	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
+	Factory::GetInstance().program2.SetDrawColour(tint_bullet * glm::vec4(backgroundcol, 1.0f));
+	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_bullet);
+}
+
+
+DLight * Bullet::GetLight()
+{
+	static DLight bulletlight (glm::vec2(0,0), light_bullet, 4, 1);
+	return &bulletlight;
 }
 

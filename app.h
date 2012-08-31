@@ -108,10 +108,15 @@ public:
 	void OnKeyUp(SDL_Keysym key);
 
 	void DropTorch();
+	std::vector<Bullet *> bullets;
+	void ShootBullet();
+
+	void UpdateEntities(float dt);
+	void UpdateBullets(float dt);
 
 	void UpdatePlayer(float dt);
 	float player_move_speed = 4.0f;  //world units per second
-	void PlayerMove(float dx, float dy, float dt);
+	void PlayerMove(float dx, float dy, float dist);
 
 	bool moving_left = false;
 	bool moving_right = false;

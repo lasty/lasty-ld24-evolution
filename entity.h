@@ -34,6 +34,7 @@ public:
 	Primitive prim_gem;
 	Primitive prim_coin;
 	Primitive prim_rock;
+	Primitive prim_bullet;
 
 	Factory();
 	~Factory();
@@ -114,11 +115,32 @@ public:
 class Rock : public Entity
 {
 public:
+	int hitpoints = 10;
+
 	Rock(float x, float y);
 	virtual ~Rock();
 
 	void Update(float dt);
 	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
 };
+
+
+class Bullet : public Entity
+{
+public:
+	float velocityx;
+	float velocityy;
+	int damage = 5;
+
+	Bullet(float x, float y, float vx, float vy);
+	virtual ~Bullet();
+
+	void Update(float dt);
+	void Draw(const glm::mat4 &proj, const glm::mat4 &view,  const glm::vec3 &backgroundcol);
+
+	DLight* GetLight();
+
+};
+
 
 #endif /* _LASTY_LD24_ENTITY_H_ */

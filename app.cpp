@@ -219,35 +219,16 @@ void App::Update(float dt)
 
 	//invmapcam = glm::translate({}, glm::vec3(-float(APP_WIDTH)/2.0, -float(APP_HEIGHT)/2.0f, 0.0f)) * glm::inverse(cam);
 
-	UpdatePlayer(dt);
-
-
 	gamemap.ResetDynamicLights();  //Clear last frame's dynamic lights
 
 
+	UpdatePlayer(dt);
 	player->Update(dt);
 
-	for (auto i = entities.begin();  i != entities.end(); )
-	{
-		Entity *e = *i;
+	UpdateBullets(dt);
 
-		e->Update(dt);
+	UpdateEntities(dt);
 
-		if (e->done)
-		{
-			delete e;
-			i = entities.erase(i);
-			continue;
-		}
-
-		DLight *l = e->GetLight();
-		if (l and LightIsOnScreen(e->x, e->y, l->radius))
-		{
-			gamemap.DynamicLight(glm::vec2(e->x, e->y), l->colour, l->radius);
-		}
-
-		i++;
-	}
 
 	UpdateWorld();
 }
@@ -355,7 +336,11 @@ void App::UpdatePlayer(float dt)
 	float origx = player->x;
 	float origy = player->y;
 
-	if (dx or dy) PlayerMove(dx, dy, dt);
+	float runmod = moving_running ? 3.0f : 1.0f;
+	float dist = (runmod * player_move_speed) * dt;
+
+
+	if (dx or dy) PlayerMove(dx, dy, dist);
 
 	for (Entity *e : entities)
 	{
@@ -375,7 +360,6 @@ void App::UpdatePlayer(float dt)
 			}
 			else if (Rock *rock = dynamic_cast<Rock*>(e))
 			{
-				float dist = 1;
 				//bump the entity
 				MoveEntity(rock, dx*dist, dy*dist);
 
@@ -387,6 +371,116 @@ void App::UpdatePlayer(float dt)
 	}
 }
 
+void App::UpdateEntities(float dt)
+{
+
+	for (auto i = entities.begin();  i != entities.end(); )
+	{
+		Entity *e = *i;
+
+		e->Update(dt);
+
+		if (e->done)
+		{
+			delete e;
+			i = entities.erase(i);
+			continue;
+		}
+
+		DLight *l = e->GetLight();
+		if (l and LightIsOnScreen(e->x, e->y, l->radius))
+		{
+			gamemap.DynamicLight(glm::vec2(e->x, e->y), l->colour, l->radius);
+		}
+
+		i++;
+	}
+}
+
+void App::UpdateBullets(float dt)
+{
+	for (auto it = bullets.begin(); it != bullets.end(); )
+	{
+		Bullet *b = *it;
+
+		b->Update(dt);
+
+		float dx = b->velocityx * dt;
+		float dy = b->velocityy * dt;
+
+		if (not MoveEntity(b, dx, dy))
+		{
+			b->done = true;
+			audio.PlaySound(hit);
+		}
+
+		for (Entity *e : entities)
+		{
+			if (intersects(b, e))
+			{
+				if (Rock *rock = dynamic_cast<Rock*>(e))
+				{
+					rock->hitpoints -= b->damage;
+
+					if (rock->hitpoints <= 0)
+					{
+						rock->done = true;
+						audio.PlaySound(explosion);
+					}
+					else
+					{
+						audio.PlaySound(hit);
+						audio.PlaySound(explosion, 0.5);
+					}
+				}
+				else if ( dynamic_cast<Gem*>(e))
+				{
+					audio.PlaySound(hit);
+					audio.PlaySound(pickup_gem, 0.2);
+				}
+				else if ( dynamic_cast<Coin*>(e))
+				{
+					audio.PlaySound(hit);
+					audio.PlaySound(pickup_coin, 0.2);
+				}
+
+				else
+				{
+					audio.PlaySound(hit);
+				}
+
+				b->done = true;
+
+				//bump the entity
+				float dist = 1;
+				if (not e->done)
+				{
+					MoveEntity(e, dx*dist, dy*dist);
+				}
+
+			}
+		}
+
+
+		if(b->done)
+		{
+			delete b;
+			it = bullets.erase(it);
+			continue;
+		}
+
+		DLight *l = b->GetLight();
+		if (l and LightIsOnScreen(b->x, b->y, l->radius))
+		{
+			gamemap.DynamicLight(glm::vec2(b->x, b->y), l->colour, l->radius);
+		}
+
+
+
+
+		it++;
+	}
+}
 
 //does this point intersect the world?
 bool App::CollidePoint(float x, float y)
@@ -455,11 +549,8 @@ bool App::MoveEntity(Entity *e, float dx, float dy)
 	return canmove;
 }
 
-void App::PlayerMove(float dx, float dy, float dt)
+void App::PlayerMove(float dx, float dy, float dist)
 {
-	float runmod = moving_running ? 3.0f : 1.0f;
-	float dist = (runmod * player_move_speed) * dt;
-
 	if (not MoveEntity(player, dx*dist, dy*dist))
 	{
 		MoveEntity(player, dx*dist, 0.0f);
@@ -534,6 +625,14 @@ void App::Render()
 		e->Draw(cam, mapcam, col);
 	}
 
+	for (Bullet *b : bullets)
+	{
+		LightPoint *t = gamemap.FindNearestLightPoint(glm::vec2(b->x, b->y));
+		glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
+		b->Draw(cam, mapcam, col);
+	}
+
+
 	LightPoint *t = gamemap.FindNearestLightPoint(glm::vec2(player->x, player->y));
 	glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
 	player->Draw(cam, mapcam, col);
@@ -554,7 +653,7 @@ void App::RenderGUI()
 	std::stringstream cursorpos;
 	cursorpos << std::setprecision(1) << std::fixed;  //this is a lot of code to replace %.2f
 	cursorpos << "(" << hover.x << "," << hover.y << ")  Dynamic Lights " << dlights.size() << " (Culled " << cull_count
-				<< " offscreen lights)  Entities " << entities.size();
+				<< " offscreen lights)  Entities " << entities.size() + bullets.size();
 
 
 	std::stringstream statusline;
@@ -576,13 +675,29 @@ void App::DropTorch()
 
 }
 
+void App::ShootBullet()
+{
+	glm::vec2 angle(hover.x - player->x , hover.y - player->y);
+
+	float velocity = 10.0f;
+	glm::vec2 v = glm::normalize(angle) * velocity;
+
+	bullets.push_back(new Bullet(player->x, player->y, v.x, v.y));
+
+	audio.PlaySound(laser);
+}
+
 void App::OnMouseDown(int x, int y, int button)
 {
-	if (button == 1 or button == 3)
+	if (button == 1)
+	{
+		ShootBullet();
+	}
+	else if (button == 2)
 	{
 		mouse_dragging = true;
 	}
-	if (button == 3)
+	else if (button == 3)
 	{
 #ifdef debug_lights
 		mouse_dragging_lights = true;

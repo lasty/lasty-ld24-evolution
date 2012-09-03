@@ -8,6 +8,9 @@
  */
 
 #include "app.h"
+
+#include "globals.h"
+
 #include "opengl.h"
 #include "vertexbuffer.h"
 #include "primitives.h"
@@ -27,6 +30,10 @@
 #include "entity.h"
 
 #include "audio.h"
+
+
+bool Draw_Collision_Radius = false;
+
 
 App::App()
 : running(true)
@@ -620,6 +627,8 @@ void App::Render()
 
 	for (Entity *e : entities)
 	{
+		if (not LightIsOnScreen(e->x, e->y, e->radius)) continue;
+
 		LightPoint *t = gamemap.FindNearestLightPoint(glm::vec2(e->x, e->y));
 		glm::vec3 col = t ? t->GetCol() : glm::vec3(1.0, 1.0, 1.0);
 		e->Draw(cam, mapcam, col);
@@ -765,6 +774,8 @@ void App::OnKeyDown(SDL_Keysym key)
 	if (key.sym == SDLK_LSHIFT or key.sym == SDLK_RSHIFT) moving_running = true;
 
 	if (key.sym == SDLK_c) NoClipping = not NoClipping;
+
+	if (key.sym == SDLK_r) Draw_Collision_Radius = not Draw_Collision_Radius;
 
 	if (key.sym == SDLK_n) GenMap();
 

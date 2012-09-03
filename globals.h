@@ -43,6 +43,7 @@
 constexpr int MAP_WIDTH = 160;  //in tiles
 constexpr int MAP_HEIGHT = 90;
 
+extern bool Draw_Collision_Radius;
 
 #include <stdio.h>
 #include <stdlib.h>

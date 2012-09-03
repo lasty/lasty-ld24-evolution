@@ -10,6 +10,8 @@
 #include "entity.h"
 #include "colours.h"
 
+#include "globals.h"
+
 //for DLight
 #include "app.h"
 
@@ -40,12 +42,13 @@ inline void TileQuad(Primitive &prim, float zoom, int x, int y, int gridx, int g
 
 Factory::Factory()
 : program1(), vb1(), prim_player1(vb1), prim_player2(vb1), prim_gem(vb1)
-, prim_coin(vb1), prim_rock(vb1), prim_bullet(vb1)
+, prim_coin(vb1), prim_rock(vb1), prim_bullet(vb1), prim_circle(vb1, 32)
 {
 	LOG("Factory()");
 
 	program1.LoadSource("basic.shader");
 	program2.LoadSource("colour.shader");
+	program3.LoadSource("solidcolour.shader");
 
 	image1.LoadFile("tiles.png");
 	image1.SetBlend(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
@@ -103,6 +106,31 @@ void Entity::Update(float dt)
 }
 
 
+void Entity::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol)
+{
+	THROW(Exception,"Shouldnt be here");
+}
+
+
+void Entity::DrawRadius(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec4 &col)
+{
+	GLERR();
+	glm::mat4 t = glm::translate(glm::mat4(), glm::vec3(x, y, 0.0f));
+	glm::mat4 r = glm::rotate(glm::mat4(), rot, glm::vec3(0.0f, 0.0f, 1.0f));
+	glm::mat4 s = glm::scale(glm::mat4(), glm::vec3(radius, radius, 1.0f));
+
+	glm::mat4 model = t * r * s;
+	Factory::GetInstance().program3.SetCamera(proj, view * model);
+	GLERR();
+
+	Factory::GetInstance().program3.SetDrawColour(col);
+	GLERR();
+
+	Factory::GetInstance().program3.Draw(Factory::GetInstance().prim_circle);
+	GLERR();
+}
+
+
 ///////////////////////////////////////////////////////////////////////////////
 
 
@@ -130,13 +158,18 @@ void Player::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 
 		Factory::GetInstance().program2.SetDrawColour(tint_player1 * glm::vec4(backgroundcol, 1.0f));
 
 		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player1);
+
 	}
 	else
 	{
-		Factory::GetInstance().program2.SetDrawColour(tint_player1 * glm::vec4(backgroundcol, 1.0f));
+		Factory::GetInstance().program2.SetDrawColour(tint_player2 * glm::vec4(backgroundcol, 1.0f));
 
 		Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_player2);
 	}
+
+
+	if (Draw_Collision_Radius) { DrawRadius(proj, view, glm::vec4(1.0f, 0.0f, 1.0f, 1.0f)); }
+
 }
 
 DLight* Player::GetLight()
@@ -169,6 +202,8 @@ void Gem::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &ba
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
 	Factory::GetInstance().program2.SetDrawColour(tint_gem * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_gem);
+
+	if (Draw_Collision_Radius) { DrawRadius(proj, view, tint_gem); }
 }
 
 DLight * Gem::GetLight()
@@ -199,6 +234,8 @@ void Coin::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &b
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
 	Factory::GetInstance().program2.SetDrawColour(tint_coin * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_coin);
+
+	if (Draw_Collision_Radius) { DrawRadius(proj, view, tint_coin); }
 }
 
 DLight * Coin::GetLight()
@@ -231,6 +268,8 @@ void Rock::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &b
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
 	Factory::GetInstance().program2.SetDrawColour(tint_rock * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_rock);
+
+	if (Draw_Collision_Radius) { DrawRadius(proj, view, tint_rock); }
 }
 
 
@@ -262,6 +301,8 @@ void Bullet::Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 
 	Factory::GetInstance().program2.SetCamera(proj, view * model_matrix);
 	Factory::GetInstance().program2.SetDrawColour(tint_bullet * glm::vec4(backgroundcol, 1.0f));
 	Factory::GetInstance().program2.Draw(Factory::GetInstance().prim_bullet);
+
+	if (Draw_Collision_Radius) { DrawRadius(proj, view, tint_bullet); }
 }
 
 
@@ -271,3 +312,23 @@ DLight * Bullet::GetLight()
 	return &bulletlight;
 }
 
+
+///////////////////////////////////////////////////////////////////////////////
+
+
+Circle::Circle(VertexBuffer &vbref, int segments)
+: Primitive(vbref)
+{
+	Begin(GL_LINE_LOOP);
+	for (int i=0; i<segments; ++i)
+	{
+		float PI = 3.141592654f;
+
+		float theta = (2*PI) * float(i) / float(segments);
+		float x = sinf(theta);
+		float y = cosf(theta);
+
+		Add( {x, y, 0.0f, 1.0f, 1.0f, 1.0f, 0.0f, 0.0f} );
+	}
+	End();
+}

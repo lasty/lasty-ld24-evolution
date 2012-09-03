@@ -17,12 +17,22 @@
 
 #include <glm.hpp>
 
+
+class Circle : public Primitive
+{
+	//VertexBuffer vb;
+public:
+	Circle(VertexBuffer &vbref, int segments=8);
+};
+
+
 //For holding primitives which we can instance
 class Factory
 {
 public:
 	Program program1;
 	ProgramColour program2;
+	ProgramColour program3;
 
 	VertexBuffer vb1;
 
@@ -35,6 +45,8 @@ public:
 	Primitive prim_coin;
 	Primitive prim_rock;
 	Primitive prim_bullet;
+
+	Circle prim_circle;
 
 	Factory();
 	~Factory();
@@ -64,9 +76,12 @@ public:
 
 	virtual void Update(float dt);
 
-	virtual void Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol){ THROW(Exception,"Shouldnt be here"); }
+	virtual void Draw(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec3 &backgroundcol);
 
 	virtual DLight* GetLight() { return nullptr; }
+
+
+	void DrawRadius(const glm::mat4 &proj, const glm::mat4 &view, const glm::vec4 &col);
 };
 
 
@@ -141,6 +156,7 @@ public:
 	DLight* GetLight();
 
 };
+
 
 
 #endif /* _LASTY_LD24_ENTITY_H_ */

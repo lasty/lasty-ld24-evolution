@@ -3,9 +3,9 @@ cmake_minimum_required(VERSION 2.8)
 set(CMAKE_MODULE_PATH $(CMAKE_MODULE_PATH) "${CMAKE_CURRENT_LIST_DIR}/cmake")
 
 if(APPLE)
-set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -Wno-comment" )
+set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11" )
 else()
-set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++ -Wno-comment" )
+set(CMAKE_CXX_FLAGS "-Wall -std=gnu++11 -static-libgcc -static-libstdc++" )
 endif()
 
 set(SOURCES main.cpp app.cpp vertexbuffer.cpp primitives.cpp

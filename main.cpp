@@ -114,7 +114,7 @@ void DumpException(Exception &e)
 	printf("[%s:%d] %s caught! : %s\n", e.file, e.line, e.EName(), e.What());
 
 	std::ostringstream etxt;
-	etxt << "[" << e.file << ":" << e.line << "]\n" << e.What();
+	etxt << "[" << e.file << ":" << e.line << "]  " << e.What();
 	MessageBox(nullptr, etxt.str().c_str(), e.EName(), 0);
 }
 #else

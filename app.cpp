@@ -74,7 +74,7 @@ App::App()
 
 	GenMap();
 
-	audio.PlaySound(startup);
+
 }
 
 
@@ -158,6 +158,7 @@ void App::GenMap()
 	//Gem *g = new Gem(player->x + 5,player->y);
 	//entities.push_back( g );
 
+	audio.PlaySound(startup);
 }
 
 void App::ClearEntities()

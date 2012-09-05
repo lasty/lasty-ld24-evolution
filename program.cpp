@@ -344,6 +344,7 @@ void ProgramColour::DiscoverUniforms()
 void ProgramColour::SetDrawColour(const glm::vec4 &colour)
 {
 	glUniform4fv(tint_colour, 1, glm::value_ptr(colour));
+	//glUniform4f(tint_colour, colour.r, colour.g, colour.b, colour.a);
 
 }
 

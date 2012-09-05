@@ -27,10 +27,12 @@ class ShaderError : public GLError
 {
 public:
 	std::string log;
+	std::string fulllog;
 
 	ShaderError(const char* what, const std::string &log, const char*file, int line)
 	: GLError(what, file, line), log(log)
 	{
+		fulllog = std::string(what) + std::string("\n\n") + log;
 	}
 
 	const char* EName()
@@ -40,7 +42,7 @@ public:
 
 	const char* What()
 	{
-		return (std::string(what) + std::string("\n") + log).c_str();
+		return fulllog.c_str();
 	}
 };
 
